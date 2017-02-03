@@ -1,3 +1,18 @@
+/*
+ * This is the bleeding edge version of our robot navigation code.
+ * So naturally a lot of it is not tested and coded entirely away
+ * from the physical FuryRoad (officially called Yamaraz).
+ * 
+ * This file is free to copy, modify, and redistribute under the
+ * terms specified in the LICENSE file (its MIT).
+ * 
+ * Use at your own discretion.
+ * Don't come to me if your robot is on fire!
+ * 
+ * Sincerely,
+ * Nishan Rayamajhee
+ */
+
 // direction flags
 const int FRONT    = 0;
 const int REAR     = 1;
