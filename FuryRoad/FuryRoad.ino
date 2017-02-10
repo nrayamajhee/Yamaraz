@@ -18,8 +18,8 @@ const int FRONT    = 0;
 const int REAR     = 1;
 const int LEFT     = 2;
 const int RIGHT    = 3;
-const int SLEFT  = 4;
-const int SRIGHT = 5;
+const int SLEFT    = 4;
+const int SRIGHT   = 5;
 
 // teensy pinouts
 const int SFR = 0;
@@ -30,33 +30,6 @@ const int DRL = 4;
 const int SRL = 5;
 const int DRR = 6;
 const int SRR = 7;
-
-/*
- * Yamaraz shall rule the Fury Road
- */
-
-void setup() {
-  initPins();
-  go (FRONT, 36);
-  go (RIGHT, 90);
-  go (FRONT, 12);
-  go (RIGHT, 90);
-  go (FRONT, 12);
-  go (SRIGHT, 12);
-  goDiag (FRONT, LEFT,16);
-  go (SRIGHT, 12);
-  go (LEFT, 90);
-  go (FRONT, 12);
-}
-
-/*
- * Yamaraz shall test its dangers
- */
-
-void loop() {
-  // make sure to uncomment code at setup
-  // before testing
-}
 
 /* 
  *  ==============
@@ -69,7 +42,14 @@ void loop() {
 void initPins() {
   
   // set all the motor pins to OUTPUT
-  DDRD = 11111111;
+  pinMode(0, OUTPUT);
+  pinMode(1, OUTPUT);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+  pinMode(6, OUTPUT);
+  pinMode(7, OUTPUT);
 
   // Set MicroStepping Pins to OUTPUT
   pinMode(21, OUTPUT);
@@ -158,14 +138,14 @@ void setDirection (const int dir) {
  *             VALUE in inches or degrees
  *             
  * Example:    go (FRONT, 12);  // 12 inches
- *             go (RIGHT, 90);  // 90 degrees
+ *             go (RIGHT, 90);  // rotate 90 degrees
  *             go (SFLEFT, 12); // strafe left 12 inches
  ***********************/
 
 void go (const int dir, int val) {
   
   // reset the port
-  PORTD = 00000000;
+  PORTD = B00000000;
 
   // set the direction
   setDirection (dir);
@@ -178,16 +158,24 @@ void go (const int dir, int val) {
   if (dir == FRONT || dir == REAR) {
 
     // val is in inches
-    // 1 inch requires 107.8 steps x 2 because we're toggling the ports
-    steps = 107.8 * val * 2;
+    // 1 inch requires 107.8 steps
+    steps = 107.8 * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
 
-      // toggle port
-      PORTD ^= 10100101;
+      digitalWrite(SFL, HIGH);
+      digitalWrite(SFR, HIGH); 
+      digitalWrite(SRL, HIGH);
+      digitalWrite(SRR, HIGH);
       
-      // control the speed
+      delayMicroseconds(500);
+      
+      digitalWrite(SFL, LOW);
+      digitalWrite(SFR, LOW);
+      digitalWrite(SRL, LOW);
+      digitalWrite(SRR, LOW);
+  
       delayMicroseconds(500);
     }
 
@@ -196,16 +184,24 @@ void go (const int dir, int val) {
   } else if (dir == LEFT || dir == RIGHT) {
 
     // val is in degrees
-    // 1 deg requires 11.32 steps x 2 because we're toggling the ports
-    steps = 11.32 * val * 2;
+    // 1 deg requires 11.32 steps
+    steps = 11.32 * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
+
+      digitalWrite(SFL, HIGH);
+      digitalWrite(SFR, HIGH); 
+      digitalWrite(SRL, HIGH);
+      digitalWrite(SRR, HIGH);
       
-      // toggle port
-      PORTD ^= 10100101;
+      delayMicroseconds(500);
       
-      // control the speed
+      digitalWrite(SFL, LOW);
+      digitalWrite(SFR, LOW);
+      digitalWrite(SRL, LOW);
+      digitalWrite(SRR, LOW);
+  
       delayMicroseconds(500);
     }
 
@@ -214,16 +210,24 @@ void go (const int dir, int val) {
   } else if (dir == SLEFT || dir == SRIGHT) {
 
     // val is in inches
-    // 1 inch requires 113 steps x 2 because we're toggling the ports
+    // 1 inch requires 113 steps
     steps = 113 * val * 2;
 
     // start moving
     for (int i = 0; i < steps; i++) {
       
-      // toggle port
-      PORTD ^= 10100101;
+      digitalWrite(SFL, HIGH);
+      digitalWrite(SFR, HIGH); 
+      digitalWrite(SRL, HIGH);
+      digitalWrite(SRR, HIGH);
       
-      // control the speed
+      delayMicroseconds(500);
+      
+      digitalWrite(SFL, LOW);
+      digitalWrite(SFR, LOW);
+      digitalWrite(SRL, LOW);
+      digitalWrite(SRR, LOW);
+  
       delayMicroseconds(500);
     }
   }
@@ -242,13 +246,13 @@ void go (const int dir, int val) {
 void goDiag (const int dir1, const int dir2, int val) {
   
   // reset the port
-  PORTD = 00000000;
+  PORTD = B00000000;
 
   // set the direction
-  setDirection (dir);
+  setDirection (dir1);
   
   // val is in inches
-  // 1 inch requires 158 steps x 2 because we're toggling the ports
+  // 1 inch requires 158 steps
   int steps = 158 * val * 2;
 
   if (dir2 == LEFT) {
@@ -256,25 +260,31 @@ void goDiag (const int dir1, const int dir2, int val) {
     // start moving left
     for (int i = 0; i < steps; i++) {
     
-      // toggle only 2 stepping pins
-      // SFR and SRL
-      PORTD ^= 10000100;
+      digitalWrite(SFR, HIGH);
+      digitalWrite(SRL, HIGH);
       
-      // control the speed
-      delayMicroseconds(500);
+      delayMicroseconds(300);
+      
+      digitalWrite(SFR, LOW);
+      digitalWrite(SRL, LOW);
+  
+      delayMicroseconds(300);
     }
     
   } else if (dir2 == RIGHT) {
     
     // start moving right
     for (int i = 0; i < steps; i++) {
-    
-      // toggle only 2 stepping pins
-      // SFL and SRR
-      PORTD ^= 00100001;
+
+      digitalWrite(SFL, HIGH);
+      digitalWrite(SRR, HIGH);
       
-      // control the speed
-      delayMicroseconds(500);
+      delayMicroseconds(300);
+      
+      digitalWrite(SFL, LOW);
+      digitalWrite(SRR, LOW);
+  
+      delayMicroseconds(300);
     }
   }
 }

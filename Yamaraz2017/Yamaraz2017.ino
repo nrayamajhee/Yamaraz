@@ -212,7 +212,7 @@ void goDiag (const int dir1, const int dir2, int val) {
 
 void setup() {
   initPins();
-  goDiag(FRONT, RIGHT,16);
+  go(SLEFT, 24);
   delay(1000);
 }
 
