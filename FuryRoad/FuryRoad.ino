@@ -1,7 +1,7 @@
 /*
  * This is the bleeding edge version of our robot navigation code.
  * So naturally a lot of it is not tested and coded entirely away
- * from the physical FuryRoad (officially called Yamaraz).
+ * from the Yamaraz.
  * 
  * This file is free to copy, modify, and redistribute under the
  * terms specified in the LICENSE file (its MIT).
@@ -22,14 +22,39 @@ const int SLEFT    = 4;
 const int SRIGHT   = 5;
 
 // teensy pinouts
-const int SFR = 0;
-const int DFR = 1;
-const int SFL = 2;
-const int DFL = 3;
-const int DRL = 4;
-const int SRL = 5;
-const int DRR = 6;
-const int SRR = 7;
+const int SFR = 1;
+const int DFR = 2;
+const int SFL = 3;
+const int DFL = 4;
+const int DRL = 5;
+const int SRL = 6;
+const int DRR = 7;
+const int SRR = 8;
+
+// ultrasonic pinouts
+const int echoFL = 9;
+const int trigFL = 10;
+const int echoFR = 11;
+const int trigFR = 12;
+const int echoRL = 24;
+const int trigRL = 25;
+const int echoRR = 26;
+const int trigRR = 27;
+
+// max distance for ultrasonic
+const int MAX_DISTANCE = 200;
+
+const int SPEED = 80;
+
+#include <NewPing.h>
+
+// Setup pinouts for ultrasonic sensors
+NewPing sonar[4] = {
+  NewPing(trigFL, echoFL, MAX_DISTANCE),
+  NewPing(trigFR, echoFR, MAX_DISTANCE),
+  NewPing(trigRL, echoRL, MAX_DISTANCE),
+  NewPing(trigRR, echoRR, MAX_DISTANCE)
+};
 
 /* 
  *  ==============
@@ -42,24 +67,27 @@ const int SRR = 7;
 void initPins() {
   
   // set all the motor pins to OUTPUT
-  pinMode(0, OUTPUT);
-  pinMode(1, OUTPUT);
-  pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
+  pinMode(SFR, OUTPUT);
+  pinMode(DFR, OUTPUT);
+  pinMode(SFL, OUTPUT);
+  pinMode(DFL, OUTPUT);
+  pinMode(DRL, OUTPUT);
+  pinMode(SRL, OUTPUT);
+  pinMode(DRR, OUTPUT);
+  pinMode(SRR, OUTPUT);
 
   // Set MicroStepping Pins to OUTPUT
-  pinMode(21, OUTPUT);
-  pinMode(22, OUTPUT);
+  pinMode(33, OUTPUT);
+  pinMode(34, OUTPUT);
+  pinMode(35, OUTPUT);
+
+  // Thumper Pinout
   pinMode(23, OUTPUT);
 
-  // micro stepping 1/4th is 010
-  digitalWrite(21, LOW);
-  digitalWrite(22, HIGH);
-  digitalWrite(23, LOW);
+  // micro stepping 1/16th is 010
+  digitalWrite(33, HIGH);
+  digitalWrite(34, LOW);
+  digitalWrite(35, HIGH);
 
 }
 
@@ -159,7 +187,7 @@ void go (const int dir, int val) {
 
     // val is in inches
     // 1 inch requires 107.8 steps
-    steps = 107.8 * val;
+    steps = 107.8 * 8 * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -169,14 +197,14 @@ void go (const int dir, int val) {
       digitalWrite(SRL, HIGH);
       digitalWrite(SRR, HIGH);
       
-      delayMicroseconds(500);
+      delayMicroseconds(SPEED);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(500);
+      delayMicroseconds(SPEED);
     }
 
   // rotational motion
@@ -185,7 +213,7 @@ void go (const int dir, int val) {
 
     // val is in degrees
     // 1 deg requires 11.32 steps
-    steps = 11.32 * val;
+    steps = 11.32 * 8 * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -195,14 +223,14 @@ void go (const int dir, int val) {
       digitalWrite(SRL, HIGH);
       digitalWrite(SRR, HIGH);
       
-      delayMicroseconds(500);
+      delayMicroseconds(SPEED);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(500);
+      delayMicroseconds(SPEED);
     }
 
   // strafing motion
@@ -211,7 +239,7 @@ void go (const int dir, int val) {
 
     // val is in inches
     // 1 inch requires 113 steps
-    steps = 113 * val * 2;
+    steps = 113 * 8 * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -221,14 +249,14 @@ void go (const int dir, int val) {
       digitalWrite(SRL, HIGH);
       digitalWrite(SRR, HIGH);
       
-      delayMicroseconds(500);
+      delayMicroseconds(SPEED);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(500);
+      delayMicroseconds(SPEED);
     }
   }
 }
@@ -253,7 +281,7 @@ void goDiag (const int dir1, const int dir2, int val) {
   
   // val is in inches
   // 1 inch requires 158 steps
-  int steps = 158 * val * 2;
+  int steps = 158 * 8 * val;
 
   if (dir2 == LEFT) {
     
@@ -263,12 +291,12 @@ void goDiag (const int dir1, const int dir2, int val) {
       digitalWrite(SFR, HIGH);
       digitalWrite(SRL, HIGH);
       
-      delayMicroseconds(300);
+      delayMicroseconds(SPEED);
       
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
   
-      delayMicroseconds(300);
+      delayMicroseconds(SPEED);
     }
     
   } else if (dir2 == RIGHT) {
@@ -279,12 +307,41 @@ void goDiag (const int dir1, const int dir2, int val) {
       digitalWrite(SFL, HIGH);
       digitalWrite(SRR, HIGH);
       
-      delayMicroseconds(300);
+      delayMicroseconds(SPEED);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(300);
+      delayMicroseconds(SPEED);
     }
   }
 }
+
+// Rotates the robot to parallel with the wall
+
+//void alignRight() {
+//  int a = sonar[1].ping_median(7);
+//  int b = sonar[3].ping_median(7);
+//  
+//  double diff = (abs(a - b)); // No correction offset for right sensors
+//  double hypo = 624.75;
+//  double errorAngleRdegree = (180 / 3.14) * asin(diff / hypo);
+//
+//  if (a > b) go( RIGHT, (int)errorAngleRdegree);
+//  if (a < b) go( LEFT, (int)errorAngleRdegree);
+//}
+//
+//void alignLeft() {
+//  int a = sonar[0].ping_median(7);
+//  int b = sonar[2].ping_median(7);
+//  
+//  double diff = (abs(a - b)); // No correction offset for right sensors
+//  double hypo = 624.75;
+//  double errorAngleRdegree = (180 / 3.14) * asin(diff / hypo);
+//
+//  if (a > b) go( RIGHT, (int)errorAngleRdegree);
+//  if (a < b) go( LEFT, (int)errorAngleRdegree);
+//  
+//  a = sonar[0].ping_median(7);
+//  b = sonar[2].ping_median(7);
+//}
