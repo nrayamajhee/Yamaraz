@@ -1,10 +1,10 @@
 /*
  * This is the bleeding edge version of our robot navigation code.
- * So naturally a lot of it is not tested and coded entirely away
- * from the Yamaraz.
+ * So naturally a lot of it is not tested and sometimes coded entirely away
+ * from our roboto, Yamaraz.
  * 
  * This file is free to copy, modify, and redistribute under the
- * terms specified in the LICENSE file (its MIT).
+ * terms specified in the COPYING file (its MIT).
  * 
  * Use at your own discretion.
  * Don't come to me if your robot is on fire!
@@ -44,8 +44,16 @@ const int trigRR = 27;
 // max distance for ultrasonic
 const int MAX_DISTANCE = 200;
 
-const int SPEED = 80;
+// speed and acceleartion
 
+const int TOP_SPEED = 80;
+// the speed variable that will be very huge at the beginning and
+// end of the motion loop but equal to TOP_SPEED in the middle
+int spd = TOP_SPEED * 9;
+// the amount of loop count that the speed remains variable
+const int ACCEL_RANGE = TOP_SPEED * 8
+
+// New Ping Library
 #include <NewPing.h>
 
 // Setup pinouts for ultrasonic sensors
@@ -80,10 +88,7 @@ void initPins() {
   pinMode(33, OUTPUT);
   pinMode(34, OUTPUT);
   pinMode(35, OUTPUT);
-
-  // Thumper Pinout
-  pinMode(23, OUTPUT);
-
+  
   // micro stepping 1/16th is 010
   digitalWrite(33, HIGH);
   digitalWrite(34, LOW);
@@ -182,7 +187,7 @@ void go (const int dir, int val) {
   int steps = 0;
 
   // linear motion
-  
+  // -------------
   if (dir == FRONT || dir == REAR) {
 
     // val is in inches
@@ -191,24 +196,30 @@ void go (const int dir, int val) {
 
     // start moving
     for (int i = 0; i < steps; i++) {
-
       digitalWrite(SFL, HIGH);
       digitalWrite(SFR, HIGH); 
       digitalWrite(SRL, HIGH);
       digitalWrite(SRR, HIGH);
-      
-      delayMicroseconds(SPEED);
+
+       delayMicroseconds(spd);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
+
+      // acceleartion
+      if (i < (ACCEL_RANGE)) {
+        spd--;
+      } else if (i > (steps - (ACCEL_RANGE))){
+        spd++;
+      }
     }
 
   // rotational motion
-  
+  // -----------------
   } else if (dir == LEFT || dir == RIGHT) {
 
     // val is in degrees
@@ -223,18 +234,25 @@ void go (const int dir, int val) {
       digitalWrite(SRL, HIGH);
       digitalWrite(SRR, HIGH);
       
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
+
+      // acceleartion
+      if (i < (ACCEL_RANGE)) {
+        spd--;
+      } else if (i > (steps - (ACCEL_RANGE))){
+        spd++;
+      }
     }
 
   // strafing motion
-  
+  // ---------------
   } else if (dir == SLEFT || dir == SRIGHT) {
 
     // val is in inches
@@ -249,14 +267,21 @@ void go (const int dir, int val) {
       digitalWrite(SRL, HIGH);
       digitalWrite(SRR, HIGH);
       
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
+
+      // acceleartion
+      if (i < (ACCEL_RANGE)) {
+        spd--;
+      } else if (i > (steps - (ACCEL_RANGE))){
+        spd++;
+      }
     }
   }
 }
@@ -272,6 +297,7 @@ void go (const int dir, int val) {
  **************************************/
 
 void goDiag (const int dir1, const int dir2, int val) {
+  
   
   // reset the port
   PORTD = B00000000;
@@ -291,12 +317,19 @@ void goDiag (const int dir1, const int dir2, int val) {
       digitalWrite(SFR, HIGH);
       digitalWrite(SRL, HIGH);
       
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
       
       digitalWrite(SFR, LOW);
       digitalWrite(SRL, LOW);
   
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
+
+      // acceleartion
+      if (i < (ACCEL_RANGE)) {
+        spd--;
+      } else if (i > (steps - (ACCEL_RANGE))){
+        spd++;
+      }
     }
     
   } else if (dir2 == RIGHT) {
@@ -307,15 +340,23 @@ void goDiag (const int dir1, const int dir2, int val) {
       digitalWrite(SFL, HIGH);
       digitalWrite(SRR, HIGH);
       
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SRR, LOW);
   
-      delayMicroseconds(SPEED);
+      delayMicroseconds(spd);
+
+      // acceleartion
+      if (i < (ACCEL_RANGE)) {
+        spd--;
+      } else if (i > (steps - (ACCEL_RANGE))){
+        spd++;
+      }
     }
   }
 }
+
 
 // Rotates the robot to parallel with the wall
 
