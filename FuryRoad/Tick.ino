@@ -44,15 +44,15 @@ void initTick(){
   analogReadResolution(ANALOG_READ_RESOLUTION);                 //Tells the Teensy to perform analog reads at the resolution you set above.
   analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
 
-  // Turn the Tick Tracer On
-  pinMode(23, OUTPUT);
-  digitalWrite(23, HIGH);
-  delay(1000);
-  digitalWrite(23, LOW); 
+  
+  // turn the tick tracer on
+  turnItOn();
 }
 
+// This is the function to call to run the tick tracer
 int getTick(){
   // Start Sampling
+  delay(500);
   samplingBegin();
   delay(500);
 
@@ -68,6 +68,15 @@ int getTick(){
    return (int)magnitudes[15];
 }
 
+
+void turnItOn() {
+  // Turn the Tick Tracer On
+  pinMode(23, OUTPUT);
+  digitalWrite(23, HIGH);
+  delay(500);
+  digitalWrite(23, LOW); 
+}
+
 void samplingCallback() {
   samples[sampleCounter] = (float32_t)analogRead(sampleSource); // Read from the ADC and store the sample data
   samples[sampleCounter+1] = 0.0;                               // Complex FFT functions require a coefficient for the imaginary part of the input.
@@ -75,6 +84,7 @@ void samplingCallback() {
   sampleCounter += 2;                                           // Update sample buffer position and stop after the buffer is filled
   if (sampleCounter >= FFT_SIZE*2) samplingTimer.end();
 }
+
 void samplingBegin() {
   sampleCounter = 0;                                            // Reset sample buffer position and start callback at necessary rate.
   samplingTimer.begin(samplingCallback, 1000000/SAMPLE_RATE_HZ);

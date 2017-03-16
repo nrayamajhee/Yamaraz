@@ -21,7 +21,11 @@ void setup() {
   initYamaraz();
   
 //  Serial.begin(9600);
-//  gridSearch();
+//getTick();
+
+//go(FRONT, 12);
+  gridSearch();
+//calDiag(FRONT, LEFT);
 }
 
 /*
@@ -37,7 +41,7 @@ void loop() {
 //  Serial.println(sonar[2].ping_median());
 //  Serial.println(sonar[3].ping_median());
 
-  Serial.println(getTick());
+//  Serial.println(getTick());
 }
 
 /*
@@ -45,18 +49,37 @@ void loop() {
  */
 
 void gridSearch() {
-  goDiag(FRONT, RIGHT, 16);
+  
+  goDiag(FRONT, RIGHT, 16.9);
+  initTick();
+  delay(1000);
   
   for (int x = 1; x <= 5; x++) {
-    for (int y = 1; y <= 4; y++) {
-      thump();
-      go (FRONT, 12);
+    
+    // if it is odd lap
+    //-----------------
+    if (x % 2 == 1) {
+      
+      // go straight
+      for (int y = 1; y <= 4; y++) { deduce(); go (FRONT, 12); }
+
+      // take a turn
+//      uTurn(RIGHT);
+      go (SRIGHT, 12);
+      
+    // if it is even lap
+    //-----------------
+    } else {
+      
+      // go straight
+      for (int y = 1; y <= 4; y++) { deduce(); go (REAR, 12); }
+      
+      // take a turn
+//      uTurn(LEFT);
+      go (SRIGHT, 12);
     }
-    if (x % 2 == 1)
-      uTurn(RIGHT);
-    else
-      uTurn(LEFT);
-  }
+  
+  }// end of lap
 }
 
 /*
@@ -81,13 +104,25 @@ void initYamaraz() {
   pinMode(0, OUTPUT);
 }
 
- void thump() {
-  if(getTicks() > 1700){
-    delay(500);
-    digitalWrite(0, HIGH);
-    delay(500);
-    digitalWrite(0, LOW);
-    delay(500);
+void deduce() {
+  if(getTick() > 1700){
+    thump();
   }
+}
+
+ void thump() {
+  delay(500);
+  digitalWrite(0, HIGH);
+  delay(500);
+  digitalWrite(0, LOW);
+  delay(500);
  }
+
+ void calDiag(const int dir1, const int dir2){
+  thump();
+  delay(1000);
+  goDiag (dir1, dir2, 16.9);
+  thump();
+
+}
 

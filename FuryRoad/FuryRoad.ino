@@ -13,6 +13,10 @@
  * Nishan Rayamajhee
  */
 
+
+// New Ping Library
+#include <NewPing.h>
+
 // direction flags
 const int FRONT    = 0;
 const int REAR     = 1;
@@ -30,6 +34,15 @@ const int DRL = 5;
 const int SRL = 6;
 const int DRR = 7;
 const int SRR = 8;
+
+// These are the calibartion value that
+// the calibartion methods in Yamaraz will assign.
+// The default are calibarted to our lab's board.
+int linear = 435;      // per inch
+int lateral = 454;     // per inch
+int diagonal = 646;    // per inch
+int rotational = 23;   // per degree
+
 
 // ultrasonic pinouts
 const int echoFL = 9;
@@ -51,10 +64,7 @@ const int TOP_SPEED = 80;
 // end of the motion loop but equal to TOP_SPEED in the middle
 int spd = TOP_SPEED * 9;
 // the amount of loop count that the speed remains variable
-const int ACCEL_RANGE = TOP_SPEED * 8
-
-// New Ping Library
-#include <NewPing.h>
+const int ACCEL_RANGE = TOP_SPEED * 8;
 
 // Setup pinouts for ultrasonic sensors
 NewPing sonar[4] = {
@@ -191,8 +201,8 @@ void go (const int dir, int val) {
   if (dir == FRONT || dir == REAR) {
 
     // val is in inches
-    // 1 inch requires 107.8 steps
-    steps = 107.8 * 8 * val;
+    // 1 inch requires 435 steps
+    steps = linear * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -223,8 +233,8 @@ void go (const int dir, int val) {
   } else if (dir == LEFT || dir == RIGHT) {
 
     // val is in degrees
-    // 1 deg requires 11.32 steps
-    steps = 11.32 * 8 * val;
+    // 1 deg requires 23 steps
+    steps = rotational * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -256,8 +266,8 @@ void go (const int dir, int val) {
   } else if (dir == SLEFT || dir == SRIGHT) {
 
     // val is in inches
-    // 1 inch requires 113 steps
-    steps = 113 * 8 * val;
+    // 1 inch requires 454 steps
+    steps = lateral * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -306,8 +316,8 @@ void goDiag (const int dir1, const int dir2, int val) {
   setDirection (dir1);
   
   // val is in inches
-  // 1 inch requires 158 steps
-  int steps = 158 * 8 * val;
+  // 1 inch requires 646 steps
+  int steps = diagonal * val;
 
   if (dir2 == LEFT) {
     
