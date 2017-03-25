@@ -1,3 +1,5 @@
+#include <Adafruit_NeoPixel.h>
+
 /*
  * This is the bleeding edge version of our robot navigation code.
  * So naturally a lot of it is not tested and sometimes coded entirely away
@@ -13,7 +15,6 @@
  * Nishan Rayamajhee
  */
 
-
 // New Ping Library
 #include <NewPing.h>
 
@@ -26,53 +27,37 @@ const int SLEFT    = 4;
 const int SRIGHT   = 5;
 
 // teensy pinouts
-const int SFR = 1;
-const int DFR = 2;
-const int SFL = 3;
-const int DFL = 4;
-const int DRL = 5;
-const int SRL = 6;
-const int DRR = 7;
-const int SRR = 8;
+// stepping and direction
+const int SFR = 10;
+const int DFR = 11;
+const int SFL = 12;
+const int DFL = 24;
+const int DRL = 25;
+const int SRL = 26;
+const int DRR = 27;
+const int SRR = 28;
 
-// These are the calibartion value that
-// the calibartion methods in Yamaraz will assign.
+// microstepping
+const int MS0 = 30;
+const int MS1 = 31;
+const int MS2 = 32;
+
+// These are the calibartion value for motors
 // The default are calibarted to our lab's board.
-int linear = 435;      // per inch
-int lateral = 454;     // per inch
-int diagonal = 646;    // per inch
-int rotational = 23;   // per degree
-
-
-// ultrasonic pinouts
-const int echoFL = 9;
-const int trigFL = 10;
-const int echoFR = 11;
-const int trigFR = 12;
-const int echoRL = 24;
-const int trigRL = 25;
-const int echoRR = 26;
-const int trigRR = 27;
-
-// max distance for ultrasonic
-const int MAX_DISTANCE = 200;
+int linear     = 435 * 2; // per inch
+int lateral    = 454 * 2; // per inch
+int diagonal   = 646 * 2; // per inch
+int rotational = 23 * 2;  // per degree
 
 // speed and acceleartion
+const int TOP_SPEED = 50;
 
-const int TOP_SPEED = 80;
 // the speed variable that will be very huge at the beginning and
 // end of the motion loop but equal to TOP_SPEED in the middle
 int spd = TOP_SPEED * 9;
 // the amount of loop count that the speed remains variable
 const int ACCEL_RANGE = TOP_SPEED * 8;
 
-// Setup pinouts for ultrasonic sensors
-NewPing sonar[4] = {
-  NewPing(trigFL, echoFL, MAX_DISTANCE),
-  NewPing(trigFR, echoFR, MAX_DISTANCE),
-  NewPing(trigRL, echoRL, MAX_DISTANCE),
-  NewPing(trigRR, echoRR, MAX_DISTANCE)
-};
 
 /* 
  *  ==============
@@ -95,14 +80,14 @@ void initPins() {
   pinMode(SRR, OUTPUT);
 
   // Set MicroStepping Pins to OUTPUT
-  pinMode(33, OUTPUT);
-  pinMode(34, OUTPUT);
-  pinMode(35, OUTPUT);
+  pinMode(MS0, OUTPUT);
+  pinMode(MS1, OUTPUT);
+  pinMode(MS2, OUTPUT);
   
   // micro stepping 1/16th is 010
-  digitalWrite(33, HIGH);
-  digitalWrite(34, LOW);
-  digitalWrite(35, HIGH);
+  digitalWrite(MS0, HIGH);
+  digitalWrite(MS1, LOW);
+  digitalWrite(MS2, HIGH);
 
 }
 
@@ -190,6 +175,9 @@ void go (const int dir, int val) {
   // reset the port
   PORTD = B00000000;
 
+  // reset the speed
+  spd = TOP_SPEED * 9;
+
   // set the direction
   setDirection (dir);
 
@@ -211,7 +199,7 @@ void go (const int dir, int val) {
       digitalWrite(SRL, HIGH);
       digitalWrite(SRR, HIGH);
 
-       delayMicroseconds(spd);
+      delayMicroseconds(spd);
       
       digitalWrite(SFL, LOW);
       digitalWrite(SFR, LOW);
@@ -312,6 +300,9 @@ void goDiag (const int dir1, const int dir2, int val) {
   // reset the port
   PORTD = B00000000;
 
+  // reset the speed
+  spd = TOP_SPEED * 9;
+  
   // set the direction
   setDirection (dir1);
   
@@ -367,32 +358,3 @@ void goDiag (const int dir1, const int dir2, int val) {
   }
 }
 
-
-// Rotates the robot to parallel with the wall
-
-//void alignRight() {
-//  int a = sonar[1].ping_median(7);
-//  int b = sonar[3].ping_median(7);
-//  
-//  double diff = (abs(a - b)); // No correction offset for right sensors
-//  double hypo = 624.75;
-//  double errorAngleRdegree = (180 / 3.14) * asin(diff / hypo);
-//
-//  if (a > b) go( RIGHT, (int)errorAngleRdegree);
-//  if (a < b) go( LEFT, (int)errorAngleRdegree);
-//}
-//
-//void alignLeft() {
-//  int a = sonar[0].ping_median(7);
-//  int b = sonar[2].ping_median(7);
-//  
-//  double diff = (abs(a - b)); // No correction offset for right sensors
-//  double hypo = 624.75;
-//  double errorAngleRdegree = (180 / 3.14) * asin(diff / hypo);
-//
-//  if (a > b) go( RIGHT, (int)errorAngleRdegree);
-//  if (a < b) go( LEFT, (int)errorAngleRdegree);
-//  
-//  a = sonar[0].ping_median(7);
-//  b = sonar[2].ping_median(7);
-//}

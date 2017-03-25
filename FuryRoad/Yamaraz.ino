@@ -19,13 +19,9 @@
 
 void setup() {
   initYamaraz();
-  
-//  Serial.begin(9600);
-//getTick();
+//  gridSearch();
 
-//go(FRONT, 12);
-  gridSearch();
-//calDiag(FRONT, LEFT);
+
 }
 
 /*
@@ -35,13 +31,7 @@ void setup() {
 void loop() {
   // make sure to uncomment code at setup
   // before testing
-
-//  Serial.println(sonar[0].ping_median());
-//  Serial.println(sonar[1].ping_median());
-//  Serial.println(sonar[2].ping_median());
-//  Serial.println(sonar[3].ping_median());
-
-//  Serial.println(getTick());
+  getGrid();
 }
 
 /*
@@ -51,78 +41,75 @@ void loop() {
 void gridSearch() {
   
   goDiag(FRONT, RIGHT, 16.9);
-  initTick();
   delay(1000);
-  
-  for (int x = 1; x <= 5; x++) {
-    
-    // if it is odd lap
-    //-----------------
-    if (x % 2 == 1) {
-      
-      // go straight
-      for (int y = 1; y <= 4; y++) { deduce(); go (FRONT, 12); }
 
-      // take a turn
-//      uTurn(RIGHT);
-      go (SRIGHT, 12);
-      
-    // if it is even lap
-    //-----------------
-    } else {
-      
-      // go straight
-      for (int y = 1; y <= 4; y++) { deduce(); go (REAR, 12); }
-      
-      // take a turn
-//      uTurn(LEFT);
-      go (SRIGHT, 12);
-    }
+  int direction = FRONT;
   
+  for (int x = 1; x <= 2; x++) {
+    
+    if (x % 2 == 1) {
+      direction = FRONT;
+    } else {
+      direction = FRONT;
+      
+    }
+    
+    // go straight
+    for (int y = 1; y <= 2; y++) {
+      getGrid();
+      go (direction, 12);
+    }
+    
+    go (SRIGHT, 12);
+    
   }// end of lap
 }
+
+
+void initYamaraz() {
+  initPins();
+  initTick();
+  initLight();
+  pinMode(thumper, OUTPUT);
+}
+
 
 /*
  * Take a U turn
  */
  
 void uTurn(const int dir) {
-  thump();
   go(dir, 90);
   delay(500);
   go(FRONT, 12);
   delay(500);
   go(dir, 90);
   delay(500);
- }
-
-void initYamaraz() {
-  initPins();
-  initTick();
-  
-  // Thumper Pinout
-  pinMode(0, OUTPUT);
 }
 
-void deduce() {
-  if(getTick() > 1700){
-    thump();
-  }
+void correct() {
+//  correct(LEFT);
+//  if(getTick() > 1700){
+//      thump();
+//  }
 }
 
- void thump() {
-  delay(500);
-  digitalWrite(0, HIGH);
-  delay(500);
-  digitalWrite(0, LOW);
-  delay(500);
- }
-
- void calDiag(const int dir1, const int dir2){
-  thump();
-  delay(1000);
-  goDiag (dir1, dir2, 16.9);
-  thump();
-
+bool getGrid() {
+//  if (thump() == WIRED){/
+    lightOn();
+    delay(200);
+    lightOff();
+///  }
+//  bool fromTick = false;
+//  bool fromThumper = false;
+//  
+//  fromTick = tickIt();
+//  fromThumper = (thump() == WIRED);
+//
+//  if(fromTick == fromThumper){
+//    return true;
+//  } else {
+//    return fromThumper;
+//  }
 }
 

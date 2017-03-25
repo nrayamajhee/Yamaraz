@@ -23,8 +23,6 @@
 int SAMPLE_RATE_HZ = 1000;
 const int FFT_SIZE = 256;
 
-const int TIC1_TRACER_PIN = 22;                                 //Plug the output of your Tic Tracer into this I/O pin on the Teensy.
-
 //Analog Input Signal Read Settings
 const int ANALOG_READ_RESOLUTION = 10;                          //This is the ADC reading resolution. I.E.: 10-bit=0-1024 (UNO/MEGA maximum), 13-bit=0-8192 (Teensy Usable Maximum), 16-bit=0-65536 (Teensy Actual Maximum Using Precision AREF Resistor)
 const int ANALOG_READ_AVERAGING = 100;                          //If you want to average X number of readings together PER analog read, before putting that number into the array that will be used to perform the FFT, this is where you adjust raw analog sample reading averaging.
@@ -36,13 +34,14 @@ float magnitudes[FFT_SIZE];                                     //This is the ar
                                                                 //These magnitudes are the magnitudes in each 'bin'. If 60Hz falls in Bin 15, you should call on magnitudes[15]
                                                                 //yourbinmagnitudevalue = 20.0*log10(magnitudes[##]) can convert it to decibels if you want. 
 int sampleCounter = 0;                                          //sampleCounter global variable says how many analog samples have been logged to the samples array, resets each time sampling completes.
-int sampleSource = TIC1_TRACER_PIN;                             //This tells the sampleBegin() function which source to sample from. By default I set it to the TIC1_INPUT_PIN (Digital 14)
+int sampleSource = tickPin;                                     //This tells the sampleBegin() function which source to sample from. By default I set it to the TIC1_INPUT_PIN (Digital 14)
 
 void initTick(){
   Serial.begin(38400);                                          //Set up serial port and set communication baud rate to 38400
-  pinMode(TIC1_TRACER_PIN, INPUT);                              //initialize the I/O pin as input
-  analogReadResolution(ANALOG_READ_RESOLUTION);                 //Tells the Teensy to perform analog reads at the resolution you set above.
-  analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
+  pinMode(tickPin, INPUT);                                      //initialize the I/O pin as input
+  pinMode(tickButton, OUTPUT);
+//  analogReadResolution(ANALOG_READ_RESOLUTION);                 //Tells the Teensy to perform analog reads at the resolution you set above.
+//  analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
 
   
   // turn the tick tracer on
@@ -52,7 +51,6 @@ void initTick(){
 // This is the function to call to run the tick tracer
 int getTick(){
   // Start Sampling
-  delay(500);
   samplingBegin();
   delay(500);
 
@@ -64,17 +62,16 @@ int getTick(){
     arm_cmplx_mag_f32(samples, magnitudes, FFT_SIZE);           // Calculate magnitude of complex numbers output by the FFT. 'samples' is interleaved as [real, imag, real, imag, real, imag,...] and the first bin is the total bin magnitude (basically ignore it).
   }
 
-  
    return (int)magnitudes[15];
 }
 
 
 void turnItOn() {
   // Turn the Tick Tracer On
-  pinMode(23, OUTPUT);
-  digitalWrite(23, HIGH);
+  digitalWrite(tickButton, HIGH);
   delay(500);
-  digitalWrite(23, LOW); 
+  digitalWrite(tickButton, LOW); 
+  delay(1000);
 }
 
 void samplingCallback() {
@@ -88,6 +85,17 @@ void samplingCallback() {
 void samplingBegin() {
   sampleCounter = 0;                                            // Reset sample buffer position and start callback at necessary rate.
   samplingTimer.begin(samplingCallback, 1000000/SAMPLE_RATE_HZ);
+}
+
+bool tickIt() {
+  // ignore first reading
+  getTick();
+  
+  if (getTick() > 1600)
+    return true;
+  else
+    return false;
+  
 }
 
 
