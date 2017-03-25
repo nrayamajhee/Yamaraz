@@ -20,6 +20,10 @@
 #define ARM_MATH_CM4
 #include <arm_math.h>
 
+// tick tracer pinout
+const int tickPin    = 23;
+const int tickButton = 7;
+
 int SAMPLE_RATE_HZ = 1000;
 const int FFT_SIZE = 256;
 
@@ -36,16 +40,29 @@ float magnitudes[FFT_SIZE];                                     //This is the ar
 int sampleCounter = 0;                                          //sampleCounter global variable says how many analog samples have been logged to the samples array, resets each time sampling completes.
 int sampleSource = tickPin;                                     //This tells the sampleBegin() function which source to sample from. By default I set it to the TIC1_INPUT_PIN (Digital 14)
 
-void initTick(){
-  Serial.begin(38400);                                          //Set up serial port and set communication baud rate to 38400
-  pinMode(tickPin, INPUT);                                      //initialize the I/O pin as input
-  pinMode(tickButton, OUTPUT);
-//  analogReadResolution(ANALOG_READ_RESOLUTION);                 //Tells the Teensy to perform analog reads at the resolution you set above.
-//  analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
+// begin sampling
+void samplingBegin() {
+  sampleCounter = 0;                                            // Reset sample buffer position and start callback at necessary rate.
+  samplingTimer.begin(samplingCallback, 1000000/SAMPLE_RATE_HZ);
+}
+// sampling callback
+void samplingCallback() {
+  samples[sampleCounter] = (float32_t)analogRead(sampleSource); // Read from the ADC and store the sample data
+  samples[sampleCounter+1] = 0.0;                               // Complex FFT functions require a coefficient for the imaginary part of the input.
+                                                                // Since we only have real data, set this coefficient to zero.
+  sampleCounter += 2;                                           // Update sample buffer position and stop after the buffer is filled
+  if (sampleCounter >= FFT_SIZE*2) samplingTimer.end();
+}
 
+bool tickIt() {
+  // ignore first reading
+  getTick();
   
-  // turn the tick tracer on
-  turnItOn();
+  if (getTick() > 1600)
+    return true;
+  else
+    return false;
+  
 }
 
 // This is the function to call to run the tick tracer
@@ -65,6 +82,17 @@ int getTick(){
    return (int)magnitudes[15];
 }
 
+oid initTick(){
+  Serial.begin(38400);                                          //Set up serial port and set communication baud rate to 38400
+  pinMode(tickPin, INPUT);                                      //initialize the I/O pin as input
+  pinMode(tickButton, OUTPUT);
+//  analogReadResolution(ANALOG_READ_RESOLUTION);                 //Tells the Teensy to perform analog reads at the resolution you set above.
+//  analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
+
+  
+  // turn the tick tracer on
+  turnItOn();
+}
 
 void turnItOn() {
   // Turn the Tick Tracer On
@@ -72,30 +100,6 @@ void turnItOn() {
   delay(500);
   digitalWrite(tickButton, LOW); 
   delay(1000);
-}
-
-void samplingCallback() {
-  samples[sampleCounter] = (float32_t)analogRead(sampleSource); // Read from the ADC and store the sample data
-  samples[sampleCounter+1] = 0.0;                               // Complex FFT functions require a coefficient for the imaginary part of the input.
-                                                                // Since we only have real data, set this coefficient to zero.
-  sampleCounter += 2;                                           // Update sample buffer position and stop after the buffer is filled
-  if (sampleCounter >= FFT_SIZE*2) samplingTimer.end();
-}
-
-void samplingBegin() {
-  sampleCounter = 0;                                            // Reset sample buffer position and start callback at necessary rate.
-  samplingTimer.begin(samplingCallback, 1000000/SAMPLE_RATE_HZ);
-}
-
-bool tickIt() {
-  // ignore first reading
-  getTick();
-  
-  if (getTick() > 1600)
-    return true;
-  else
-    return false;
-  
 }
 
 

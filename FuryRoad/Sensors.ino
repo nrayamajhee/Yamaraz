@@ -1,6 +1,5 @@
-const int SOLID = 0;
-const int WIRED = 1;
-const int HOLLOW = 2;
+// New Ping Library
+#include <NewPing.h>
 
 // max distance for ultrasonic
 const int MAX_DISTANCE = 200;
@@ -39,25 +38,9 @@ NewPing sonar[8] = {
   NewPing(trigRRR, echoRRR, MAX_DISTANCE)
 };
 
-
-// tick tracer pinout
-const int tickPin    = 23;
-const int tickButton = 7;
-
-
-// thumper pinout
-const int thumper = 29;
-const int micro = 8;
-
-// thumper threashold
-const int posThresh = 550;
-const int negThresh = 400;
-
-// LED
-const int LEDpin = 6;
-Adafruit_NeoPixel strip;
-
-
+/*
+ * Ultraonic method for alignment
+ */
 int align (const int dir){
   int a = 0, b = 0;
   double aIn = 0.0, bIn = 0.0;
@@ -112,69 +95,13 @@ int align (const int dir){
   return (int) errorDeg;
 }
 
+// correct the placement within the grid with this method
+
 void correct (const int dir) {
   int cnt = 0;
   while (align (RIGHT) < 5) {
     cnt++;
     if (cnt > 5) break;
   }
-}
-
-int thump() {
-  int counter = 0;
-  int arrayIndex = 20000;
-  int getData[arrayIndex];
-
-  digitalWrite(thumper, HIGH);        //hit
-  delay(25);                          //wait for the thumper to be close to the ground
-  for (int i = 0; i < arrayIndex; i++) {
-    getData[i] = analogRead(8);       //sample data
-    if (getData[i] > posThresh|| getData[i] < negThresh)         //if the sampled data is greater than threshold increase counter
-    counter++;
-  }
-  delay(100);
-  
-  digitalWrite(thumper,LOW);     //take it up
-  delay(500);
-  Serial.print("Counter = ");
-  Serial.println(counter);          //Display counter. It is different for hollow and foam
-
-  if (counter < 2000) {
-    
-    Serial.println("Its solid babe!");
-    return SOLID;
-    
-  } else if (counter < 2500) {
-    
-     Serial.println("Don't kill me!");
-     return WIRED;
-     
-  } else {
-    
-     Serial.println("It smells fishy in here!");
-     return HOLLOW;
-  }
-}
-
-void initLight() {
-  strip = Adafruit_NeoPixel (60, LEDpin, NEO_GRB + NEO_KHZ800);
-  strip.begin();
-  strip.show();
-}
-
-void lightOn() {
-  for(int i = 0; i < 56; i++) {
-    if(i % 8 != 0)
-      strip.setPixelColor(i,5,0,0);
-  }
-  strip.show();
-}
-
-void lightOff() {
-  for(int i = 0; i < 56; i++) {
-    if(i % 8 != 0)
-      strip.setPixelColor(i,0,0,0);
-  }
-  strip.show();
 }
 

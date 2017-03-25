@@ -1,5 +1,3 @@
-#include <Adafruit_NeoPixel.h>
-
 /*
  * This is the bleeding edge version of our robot navigation code.
  * So naturally a lot of it is not tested and sometimes coded entirely away
@@ -15,9 +13,6 @@
  * Nishan Rayamajhee
  */
 
-// New Ping Library
-#include <NewPing.h>
-
 // direction flags
 const int FRONT    = 0;
 const int REAR     = 1;
@@ -28,6 +23,7 @@ const int SRIGHT   = 5;
 
 // teensy pinouts
 // stepping and direction
+
 const int SFR = 10;
 const int DFR = 11;
 const int SFL = 12;
@@ -44,6 +40,7 @@ const int MS2 = 32;
 
 // These are the calibartion value for motors
 // The default are calibarted to our lab's board.
+
 int linear     = 435 * 2; // per inch
 int lateral    = 454 * 2; // per inch
 int diagonal   = 646 * 2; // per inch
@@ -54,10 +51,11 @@ const int TOP_SPEED = 50;
 
 // the speed variable that will be very huge at the beginning and
 // end of the motion loop but equal to TOP_SPEED in the middle
+
 int spd = TOP_SPEED * 9;
+
 // the amount of loop count that the speed remains variable
 const int ACCEL_RANGE = TOP_SPEED * 8;
-
 
 /* 
  *  ==============

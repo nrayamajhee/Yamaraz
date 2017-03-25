@@ -19,7 +19,7 @@
 
 void setup() {
   initYamaraz();
-//  gridSearch();
+  gridSe/arch();
 
 
 }
@@ -50,7 +50,7 @@ void gridSearch() {
     if (x % 2 == 1) {
       direction = FRONT;
     } else {
-      direction = FRONT;
+      direction = REAR;
       
     }
     
