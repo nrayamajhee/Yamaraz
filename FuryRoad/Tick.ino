@@ -1,18 +1,19 @@
 /*
  * This is the bleeding edge version of our robot navigation code.
  * So naturally a lot of it is not tested and sometimes coded entirely away
- * from our roboto, Yamaraz.
- * 
- * Use at your own discretion.
- * Don't come to me if your robot is on fire!
- * 
- * This particular chunk of code is a fork of
- * Thomas Miller's experiment with Tick Tracers
- * here at the UNO Robotics Laboratory.
+ * from our robot, Yamaraz.
  * 
  * This file is free to copy, modify, and redistribute under the
  * terms specified in the COPYING file (its MIT).
  * 
+ * Use at your own discretion.
+ * Don't come to me if your robot is on fire!
+ * 
+ * This particular chunk of code (basically the comments
+ * and the variables) is a fork of
+ * Thomas Miller's experiment with Tick Tracers
+ * here at the UNO Robotics Laboratory.
+
  * Sincerely,
  * Nishan Rayamajhee
  */

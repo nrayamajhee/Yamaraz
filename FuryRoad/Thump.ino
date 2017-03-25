@@ -1,3 +1,18 @@
+/*
+ * This is the bleeding edge version of our robot navigation code.
+ * So naturally a lot of it is not tested and sometimes coded entirely away
+ * from our robot, Yamaraz.
+ * 
+ * This file is free to copy, modify, and redistribute under the
+ * terms specified in the COPYING file (its MIT).
+ * 
+ * Use at your own discretion.
+ * Don't come to me if your robot is on fire!
+ * 
+ * Sincerely,
+ * Nishan Rayamajhee
+ */
+ 
 // the flags representing solid, wired and hollow state.
 const int SOLID = 0; // represented by green
 const int WIRED = 1;                // red

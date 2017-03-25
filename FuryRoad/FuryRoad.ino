@@ -1,7 +1,7 @@
 /*
  * This is the bleeding edge version of our robot navigation code.
  * So naturally a lot of it is not tested and sometimes coded entirely away
- * from our roboto, Yamaraz.
+ * from our robot, Yamaraz.
  * 
  * This file is free to copy, modify, and redistribute under the
  * terms specified in the COPYING file (its MIT).
