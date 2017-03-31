@@ -13,6 +13,9 @@
  * Nishan Rayamajhee
  */
 
+const int ROWS = 6;
+const int COLS = 6;
+
 // direction flags
 const int FRONT    = 0;
 const int REAR     = 1;
@@ -21,26 +24,53 @@ const int RIGHT    = 3;
 const int SLEFT    = 4;
 const int SRIGHT   = 5;
 
-// teensy pinouts
-// stepping and direction
+/* teensy pinouts LEFT */
 
-const int SFR = 10;
-const int DFR = 11;
-const int SFL = 12;
-const int DFL = 24;
+// GND
+const int tickButton = 0;
+const int thumper    = 1;
+const int LEDpin     = 2;
+//...
+const int echoFL = 3;
+const int trigFL = 4;
+const int echoFR = 5;
+const int trigFR = 6;
+const int echoRL = 7;
+const int trigRL = 8;
+const int echoRR = 9;
+const int trigRR = 10;
+//...
+const int SRR = 11;
+const int DRR = 12;
+// tic tracer 3.3 volts
+const int SRL = 24;
 const int DRL = 25;
-const int SRL = 26;
-const int DRR = 27;
-const int SRR = 28;
-
-// microstepping
+const int DFL = 26;
+const int SFL = 27;
+const int DFR = 28;
+const int SFR = 29;
 const int MS0 = 30;
 const int MS1 = 31;
 const int MS2 = 32;
 
-// These are the calibartion value for motors
-// The default are calibarted to our lab's board.
+/* teensy pinouts RIGHT */
+// VIN
+// Microphone GND
+// Microphone 3.3V
+const int mic     = 23;
+const int tickPin = 22;
+//...
+const int echoFFL = 21;
+const int trigFFL = 20;
+const int echoFFR = 19;
+const int trigFFR = 18;
+const int echoRRL = 17;
+const int trigRRL = 16;
+const int echoRRR = 15;
+const int trigRRR = 14;
 
+
+// These are the calibartion value for motors
 int linear     = 435 * 2; // per inch
 int lateral    = 454 * 2; // per inch
 int diagonal   = 646 * 2; // per inch
@@ -48,13 +78,7 @@ int rotational = 23 * 2;  // per degree
 
 // speed and acceleartion
 const int TOP_SPEED = 50;
-
-// the speed variable that will be very huge at the beginning and
-// end of the motion loop but equal to TOP_SPEED in the middle
-
 int spd = TOP_SPEED * 9;
-
-// the amount of loop count that the speed remains variable
 const int ACCEL_RANGE = TOP_SPEED * 8;
 
 /* 
@@ -169,10 +193,6 @@ void setDirection (const int dir) {
  ***********************/
 
 void go (const int dir, int val) {
-  
-  // reset the port
-  PORTD = B00000000;
-
   // reset the speed
   spd = TOP_SPEED * 9;
 
@@ -293,11 +313,6 @@ void go (const int dir, int val) {
  **************************************/
 
 void goDiag (const int dir1, const int dir2, int val) {
-  
-  
-  // reset the port
-  PORTD = B00000000;
-
   // reset the speed
   spd = TOP_SPEED * 9;
   

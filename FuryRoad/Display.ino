@@ -14,34 +14,56 @@
  */
 
 #include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoMatrix.h>
+#include <gamma.h>
+#include <Adafruit_GFX.h>
 
-// LED
-const int LEDpin = 6;
+//color definitions
+#define BLACK    0x0000
+#define BLUE     0x001F
+#define RED      0xF800
+#define GREEN    0x07E0
+#define CYAN     0x07FF
+#define MAGENTA  0xF81F
+#define YELLOW   0xFFE0 
+#define WHITE    0xFFFF
 
-// Adafruit LED
-Adafruit_NeoPixel strip;
+//Adafruit LED matrix
+/*
+  first two args are dimensions of array, 8x8
+  third arg is arduino pin the array is connected to 
+  last arg is for orientation of array - 
+  BOTTOM can be changed to TOP, RIGHT to LEFT, COLUMNS to ROWS
+*/
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(8, 8, LEDpin,
+  NEO_MATRIX_TOP     + NEO_MATRIX_LEFT +
+  NEO_MATRIX_COLUMNS + NEO_MATRIX_PROGRESSIVE);
 
-// init the light
-void initLight() {
-  strip = Adafruit_NeoPixel (60, LEDpin, NEO_GRB + NEO_KHZ800);
-  strip.begin();
-  strip.show();
-}
-
-// turn the light on
-void lightOn() {
-  for(int i = 0; i < 56; i++) {
-    if(i % 8 != 0)
-      strip.setPixelColor(i,5,0,0);
+void lightUp(){
+  matrix.begin();
+  matrix.setBrightness(10);
+  for(int x = 0; x < 8; x++) {
+    for(int y = 0; y < 8; y++){
+      matrix.drawPixel(x,y,CYAN); 
+    }
   }
-  strip.show();
-}
-
-void lightOff() {
-  for(int i = 0; i < 56; i++) {
-    if(i % 8 != 0)
-      strip.setPixelColor(i,0,0,0);
+  matrix.show();
+  delay(1000);
+  for(int x = 0; x < 8; x++) {
+    for(int y = 0; y < 8; y++){
+      matrix.drawPixel(x,y,BLACK); 
+    }
   }
-  strip.show();
+  matrix.show();
 }
 
+void lightOn(int x, int y, int color) {
+  //change brightness of array, values 0-255 (off - retina death)
+  matrix.setBrightness(10);
+
+//write to a pixel with predefined colors - (x,y,color)
+  matrix.drawPixel(x,y,color);
+
+//show
+  matrix.show();
+}

@@ -21,9 +21,10 @@
 #define ARM_MATH_CM4
 #include <arm_math.h>
 
-// tick tracer pinout
-const int tickPin    = 23;
-const int tickButton = 7;
+// the flags representing solid, wired and hollow state.
+const int SOLID = 0; // represented by green
+const int WIRED = 1;                // red
+const int HOLLOW = 2;               // blue
 
 int SAMPLE_RATE_HZ = 1000;
 const int FFT_SIZE = 256;
@@ -55,11 +56,27 @@ void samplingCallback() {
   if (sampleCounter >= FFT_SIZE*2) samplingTimer.end();
 }
 
+void initTick(){
+  Serial.begin(9600);                                          //Set up serial port and set communication baud rate to 38400
+  pinMode(tickPin, INPUT);                                      //initialize the I/O pin as input
+  pinMode(tickButton, OUTPUT);
+  analogReadResolution(ANALOG_READ_RESOLUTION);                 //Tells the Teensy to perform analog reads at the resolution you set above.
+  analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
+}
+
+void turnItOn() {
+  // Turn the Tick Tracer On
+  digitalWrite(tickButton, HIGH);
+  delay(500);
+  digitalWrite(tickButton, LOW); 
+  delay(1000);
+}
+
 bool tickIt() {
   // ignore first reading
   getTick();
   
-  if (getTick() > 1600)
+  if (getTick() > 500)
     return true;
   else
     return false;
@@ -68,6 +85,7 @@ bool tickIt() {
 
 // This is the function to call to run the tick tracer
 int getTick(){
+  sampleSource = tickPin;
   // Start Sampling
   samplingBegin();
   delay(500);
@@ -83,24 +101,103 @@ int getTick(){
    return (int)magnitudes[15];
 }
 
-oid initTick(){
-  Serial.begin(38400);                                          //Set up serial port and set communication baud rate to 38400
-  pinMode(tickPin, INPUT);                                      //initialize the I/O pin as input
-  pinMode(tickButton, OUTPUT);
-//  analogReadResolution(ANALOG_READ_RESOLUTION);                 //Tells the Teensy to perform analog reads at the resolution you set above.
-//  analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
+int thumpAnalog() {
+  int counter = 0;
+  int arrayIndex = 20000;
+  int getData[arrayIndex];
 
+  digitalWrite(thumper, HIGH);
+  delay(25);
+
+  for (int i = 0; i < arrayIndex; i++) {
+    getData[i] = analogRead(9);       //sample data
+    if (getData[i] > 600|| getData[i] < 400)         //if the sampled data is greater than threshold increase counter
+    counter++;
+  }
+  delay(100);
   
-  // turn the tick tracer on
-  turnItOn();
-}
-
-void turnItOn() {
-  // Turn the Tick Tracer On
-  digitalWrite(tickButton, HIGH);
+  digitalWrite(thumper,LOW);     //take it up
   delay(500);
-  digitalWrite(tickButton, LOW); 
-  delay(1000);
+  Serial.print("Counter = ");
+  Serial.println(counter);          //Display counter. It is different for hollow and foam
+
+  if (counter < 2000) {
+    
+    Serial.println("Its solid babe!");
+    return SOLID;
+    
+  } else if (counter < 2500) {
+    
+     Serial.println("Don't kill me!");
+     return WIRED;
+     
+  } else {
+    
+     Serial.println("It smells fishy in here!");
+     return HOLLOW;
+  }
 }
 
+int thump() {
+  
+  digitalWrite(thumper, HIGH);
+  delay(200);
+  digitalWrite(thumper, LOW);
+  delay(200);
+  digitalWrite(thumper, HIGH);
+  delay(200);
+  
+  sampleSource = mic; 
+  
+  // Start Sampling
+  samplingBegin();
+  delay(500);
+
+  // When it's done
+  if(sampleCounter >= FFT_SIZE*2) {
+    arm_cfft_radix4_instance_f32 fft_inst;                      //Calls the ARM FFT Library, sets up fft_inst instance for a CFFT of radix4 (base4) at single precision floating point 32-bit numbers.
+    arm_cfft_radix4_init_f32(&fft_inst, FFT_SIZE, 0, 1);        //Tells the FFT Library you're using instance 'fft_inst', the FFT Bin Size is 'FFT_SIZE', ifftFlag '0' tells it to perform a forward direction FFT (as opposed to inverse '1'), and bitReverseFlag '1' says we want the output bits to stream in the reverse direction.
+    arm_cfft_radix4_f32(&fft_inst, samples);                    //Control structure initialization for FFT function
+    arm_cmplx_mag_f32(samples, magnitudes, FFT_SIZE);           // Calculate magnitude of complex numbers output by the FFT. 'samples' is interleaved as [real, imag, real, imag, real, imag,...] and the first bin is the total bin magnitude (basically ignore it).
+  }
+
+
+  int sum = 0;
+  int sum1 = 0;
+  
+  for(int i = 20; i < 50; i++){
+   sum += magnitudes[i];
+  }
+
+
+  // DEBUG displays the entire bin
+  for (int i = 1; i < 256; i++) {
+    sum1 += magnitudes[i];
+    if(i % 10 == 0) {
+      Serial.print("Sum to ");
+      Serial.print(i);
+      Serial.print(" : ");
+      Serial.println(sum1);
+      sum1 = 0;
+    }
+  }
+  
+  Serial.println();
+  Serial.println(sum);
+  Serial.println();
+  
+  digitalWrite(thumper,LOW); 
+  delay(1000);
+
+  if (sum < 5000) {
+    
+    Serial.println("Its solid!");
+    return SOLID;
+    
+  } else {
+    
+     Serial.println("It's hollow!");
+     return HOLLOW;
+  }
+}
 

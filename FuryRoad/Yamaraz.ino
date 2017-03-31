@@ -19,9 +19,10 @@
 
 void setup() {
   initYamaraz();
-  gridSe/arch();
-
-
+  gridSearch();
+//  correctPan(1, 1);
+//go(FRONT, 12);/
+// / turnItOn();
 }
 
 /*
@@ -31,7 +32,8 @@ void setup() {
 void loop() {
   // make sure to uncomment code at setup
   // before testing
-  getGrid();
+///Serial.println(getTick());
+//align(REAR);/
 }
 
 /*
@@ -40,36 +42,55 @@ void loop() {
 
 void gridSearch() {
   
-  goDiag(FRONT, RIGHT, 16.9);
-  delay(1000);
+  goDiag(FRONT, RIGHT, 19);
 
-  int direction = FRONT;
+  int x = 1;
+  int y = 1;
+
+  // turn the tick tracer on
+  turnItOn();
+//  correct(x, y);
   
-  for (int x = 1; x <= 2; x++) {
-    
+  for (x = 1; x <= ROWS; x++) {
+    // odd lap
     if (x % 2 == 1) {
-      direction = FRONT;
+      // go front
+      for (y = 1; y < COLS; y++) {
+        routine(x, y);
+        go (FRONT, 12);
+      }
+
+    // even lap
     } else {
-      direction = REAR;
-      
+      // go reverse
+      for (y = COLS; y > 1; y--) {
+        routine(x, y);
+        go (REAR, 12);
+      }
     }
-    
-    // go straight
-    for (int y = 1; y <= 2; y++) {
-      getGrid();
-      go (direction, 12);
-    }
-    
+
+//    correct(x, y);
+    routine(x, y);
     go (SRIGHT, 12);
     
   }// end of lap
+
+//  returnHome(7,3);/
+}
+
+
+void returnHome(int x, int y) {
+  go(LEFT, x-1);
+  go(REAR, y-1);
+  goDiag(REAR, LEFT, 19);
 }
 
 
 void initYamaraz() {
   initPins();
+  lightUp();
   initTick();
-  initLight();
+  lightUp();
   pinMode(thumper, OUTPUT);
 }
 
@@ -78,38 +99,30 @@ void initYamaraz() {
  * Take a U turn
  */
  
-void uTurn(const int dir) {
-  go(dir, 90);
-  delay(500);
-  go(FRONT, 12);
-  delay(500);
-  go(dir, 90);
-  delay(500);
+void routine(int x, int y) {
+  
+  Serial.print(x);
+  Serial.print(" ");
+  Serial.println(y);
+  
+//  correctPan(x, y);
+//  detect(x, y);
 }
 
-void correct() {
-//  correct(LEFT);
-//  if(getTick() > 1700){
-//      thump();
-//  }
-}
-
-bool getGrid() {
-//  if (thump() == WIRED){/
-    lightOn();
-    delay(200);
-    lightOff();
-///  }
-//  bool fromTick = false;
-//  bool fromThumper = false;
-//  
-//  fromTick = tickIt();
-//  fromThumper = (thump() == WIRED);
-//
-//  if(fromTick == fromThumper){
-//    return true;
-//  } else {
-//    return fromThumper;
-//  }
+bool detect(int x, int y) {
+  tickIt(); // ignore the first one
+  
+  if(tickIt() == WIRED){
+    lightOn(x, y, RED);
+  
+  } else {
+    if(thump() == HOLLOW){
+      lightOn(x, y, BLUE);
+    
+    } else {
+      
+      lightOn(x, y, GREEN);
+    }
+  }
 }
 

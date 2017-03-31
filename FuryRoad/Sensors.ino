@@ -19,28 +19,6 @@
 // max distance for ultrasonic
 const int MAX_DISTANCE = 200;
 
-// ultrasonic pinouts
-const int echoFL  = 18;
-const int trigFL  = 19;
-const int echoFFL = 20;
-const int trigFFL = 21;
-
-const int echoFR  = 16;
-const int trigFR  = 17;
-const int echoFFR = 8;
-const int trigFFR = 9;
-
-const int trigRL = 36;
-const int echoRL = 35;
-const int trigRR = 34;
-const int echoRR = 33;
-
-
-const int echoRRL = 14;
-const int trigRRL = 15;
-const int echoRRR = 37;
-const int trigRRR = 38;
-
 // Setup pinouts for ultrasonic sensors
 NewPing sonar[8] = {
   NewPing(trigFL, echoFL, MAX_DISTANCE),
@@ -56,41 +34,52 @@ NewPing sonar[8] = {
 /*
  * Ultraonic method for alignment
  */
-int align (const int dir){
+
+void pan (const int dir, int destination){
   int a = 0, b = 0;
-  double aIn = 0.0, bIn = 0.0;
-  double diff = 0.0, errorDeg = 0.0;
-  
-  if (dir == LEFT) {
+  int dis = 0;
+
+  if (dir == FRONT){
+
+    a = sonar[1].ping_median(7);
+    b = sonar[3].ping_median(7);
+
+    // ((a + b) / 2 - offset) / per Inch
+    dis = ((a + b) / ( 2 * 142)) - 1;
+
+    if (destination > dis) {
+      go(REAR, (destination - dis));
     
-    a = sonar[0].ping_median(7) - 248;
-    b = sonar[4].ping_median(7) - 182;
-    
-    aIn = (double) a / 141.25;
-    bIn = (double) b / 146.66;
-    
-    diff = abs(aIn - bIn);
-    errorDeg = (180 / 3.14) * asin(diff / 7); // the sensors are 7 inch apart
-    
-    if (errorDeg < 45) {
-      if (a < b) go (RIGHT, (int)errorDeg);
-      if (a > b) go (LEFT, (int)errorDeg);
+    } else {
+      go(FRONT, (dis - destination));
     }
+    
+  } else if (dir == LEFT) {
+    a = sonar[0].ping_median(7);
+    b = sonar[4].ping_median(7);
 
+    // ((a + b) / 2 - offset) / per Inch
+    dis = ((a + b) / ( 2 * 142)) - 1;
+
+    if (destination > dis) {
+      go(SRIGHT, (destination - dis));
+    
+    } else {
+      go(SLEFT, (dis - destination));
+    }
+  
   } else if (dir == RIGHT) {
-    
-    a = sonar[2].ping_median(7) - 178;
-    b = sonar[6].ping_median(7) - 183;
-    
-    aIn = (double) a / 145.33;
-    bIn = (double) b / 147.66;
-    
-    diff = abs(aIn - bIn);
-    errorDeg = (180 / 3.14) * asin(diff / 7); // the sensors are 7 inch apart
 
-    if (errorDeg < 45) {
-      if (a > b) go (RIGHT, (int)errorDeg);
-      if (a < b) go (LEFT, (int)errorDeg);
+    a = sonar[2].ping_median(7);
+    b = sonar[6].ping_median(7);
+
+    dis = (a + b) / (2 * 154) - 1;
+
+    if (destination > dis) {
+      go(SLEFT, (destination - dis));
+    
+    } else {
+      go(SRIGHT, (dis - destination));
     }
   }
 
@@ -98,25 +87,103 @@ int align (const int dir){
   Serial.print(a);
   Serial.print(" b = ");
   Serial.println(b);
-  Serial.print("aIn = ");
-  Serial.print(aIn);
-  Serial.print(" bIn = ");
-  Serial.println(bIn);
-  Serial.print("diff = ");
-  Serial.print(diff);
-  Serial.print(" errorDeg = ");
-  Serial.println(errorDeg);
-  
-  return (int) errorDeg;
+  Serial.print("dest = ");
+  Serial.print(destination);
+  Serial.print(" dis = ");
+  Serial.println(dis);
+}
+
+int align(const int dir) {
+  int a = 0;
+  int b = 0;
+  int deg = 0;
+
+  if (dir == FRONT){
+
+    a = sonar[1].ping_median(7);
+    b = sonar[3].ping_median(7);
+
+    int diff = abs(b-a) - 30; // 30 is the difference in reading between the right sensors
+
+    deg = (180 / 3.14) * asin((double)diff / 1050);
+
+    if (a > b) {
+      go(RIGHT, deg); 
+    } else if (b > a) {
+      go (LEFT, deg);
+    }
+    
+  } else if (dir == RIGHT) {
+    a = sonar[2].ping_median(7);
+    b = sonar[6].ping_median(7);
+
+    int diff = abs(b-a) - 30; // 30 is the difference in reading between the right sensors
+
+    deg = (180 / 3.14) * asin((double)diff / 1050);
+
+    if (a > b) {
+      go(RIGHT, deg); 
+    } else if (b > a) {
+      go (LEFT, deg);
+    }
+  } else if (dir == LEFT) {
+    a = sonar[0].ping_median(7);
+    b = sonar[4].ping_median(7);
+
+    int diff = abs(b-a) - 4; // 4 is the difference in reading between the left sensors
+
+    deg = (180 / 3.14) * asin((double)diff / 1050);
+
+    if (a > b) {
+      go(LEFT, deg); 
+    } else if (b > a) {
+      go (RIGHT, deg);
+    }
+  } else if (dir == REAR) {
+    a = sonar[5].ping_median(7);
+    b = sonar[7].ping_median(7);
+
+    int diff = abs(b-a) - 4; // 4 is the difference in reading between the left sensors
+
+    deg = (180 / 3.14) * asin((double)diff / 1050);
+
+    if (a > b) {
+      go(LEFT, deg); 
+    } else if (b > a) {
+      go (RIGHT, deg);
+    }
+  }
+
+  Serial.println(a);
+  Serial.println(b);
+  Serial.println(deg);
+  Serial.println();
+  return deg;
+ 
 }
 
 // correct the placement within the grid with this method
 
-void correct (const int dir) {
+void correct (int x, int y) {
   int cnt = 0;
-  while (align (RIGHT) < 5) {
+  int dir;
+  
+  if(x < (ROWS / 2))
+    dir = LEFT;
+  else
+    dir = RIGHT;
+    
+  while (align(dir) < 20) {
     cnt++;
-    if (cnt > 5) break;
+    if (cnt > 3) break;
+  }
+}
+
+void correctPan (int x, int y) {
+  if (x <= (ROWS / 2)){
+    pan(LEFT, (x * 12) + 2);
+  } else {
+    pan(RIGHT, ((ROWS - x) * 12) + 2);
   }
 }
 
