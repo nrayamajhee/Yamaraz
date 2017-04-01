@@ -20,9 +20,10 @@
 void setup() {
   initYamaraz();
   gridSearch();
-//  correctPan(1, 1);
-//go(FRONT, 12);/
-// / turnItOn();
+//  routine(3,3);
+//go (FRONT, 12);
+//routine(1,3);
+//turnItOn();
 }
 
 /*
@@ -32,8 +33,10 @@ void setup() {
 void loop() {
   // make sure to uncomment code at setup
   // before testing
-///Serial.println(getTick());
-//align(REAR);/
+//pan(FRONT, 24);
+//getDis(FRONT);
+//getDis(REAR);
+//Serial.println(getTick());
 }
 
 /*
@@ -42,18 +45,21 @@ void loop() {
 
 void gridSearch() {
   
-  goDiag(FRONT, RIGHT, 19);
+  int x = 0;
+  int y = 0;
 
-  int x = 1;
-  int y = 1;
-
+  lightOn(x, y, GREEN);
   // turn the tick tracer on
   turnItOn();
-//  correct(x, y);
+  
+  goDiag(FRONT, RIGHT, 19);
+  correct(x, y);
   
   for (x = 1; x <= ROWS; x++) {
+    
     // odd lap
     if (x % 2 == 1) {
+      
       // go front
       for (y = 1; y < COLS; y++) {
         routine(x, y);
@@ -62,6 +68,7 @@ void gridSearch() {
 
     // even lap
     } else {
+    
       // go reverse
       for (y = COLS; y > 1; y--) {
         routine(x, y);
@@ -69,13 +76,10 @@ void gridSearch() {
       }
     }
 
-//    correct(x, y);
     routine(x, y);
     go (SRIGHT, 12);
     
   }// end of lap
-
-//  returnHome(7,3);/
 }
 
 
@@ -85,44 +89,57 @@ void returnHome(int x, int y) {
   goDiag(REAR, LEFT, 19);
 }
 
-
-void initYamaraz() {
-  initPins();
-  lightUp();
-  initTick();
-  lightUp();
-  pinMode(thumper, OUTPUT);
-}
-
-
-/*
- * Take a U turn
- */
  
 void routine(int x, int y) {
-  
-  Serial.print(x);
-  Serial.print(" ");
-  Serial.println(y);
-  
-//  correctPan(x, y);
-//  detect(x, y);
+//  Serial.print(x);
+//  Serial.print(" ");
+//  Serial.println(y);
+  correct(x, y);
+  correctPan(x, y);
+  detect(x, y);
+
+//  handleObstacle();
 }
 
-bool detect(int x, int y) {
+void detect(int x, int y) {
   tickIt(); // ignore the first one
   
   if(tickIt() == WIRED){
     lightOn(x, y, RED);
   
   } else {
-    if(thump() == HOLLOW){
-      lightOn(x, y, BLUE);
-    
-    } else {
+    if(x == 2){
+      go(SLEFT, 2);
+      delay(250);
       
-      lightOn(x, y, GREEN);
+    } else if (x == 3) {
+      go(SRIGHT, 2);
+      delay(250);
+    }
+    
+    int t1 = thump();
+    int t2 = thump();
+
+    if (t1 == HOLLOW && t2 == HOLLOW){
+      lightOn(x, y, BLUE);
+    }
+    else if (t1 == SOLID && t2 == SOLID) {
+      lightOn(x, y, BLACK);
+    }
+    else {
+      if( thump() == HOLLOW){
+        lightOn(x, y, BLUE);
+      } else {
+        lightOn(x, y, BLACK);
+      }
     }
   }
 }
 
+void initYamaraz() {
+  initPins();
+  lightUp();
+  initTick();
+  initThump();
+  lightUp();
+}

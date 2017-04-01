@@ -21,11 +21,6 @@
 #define ARM_MATH_CM4
 #include <arm_math.h>
 
-// the flags representing solid, wired and hollow state.
-const int SOLID = 0; // represented by green
-const int WIRED = 1;                // red
-const int HOLLOW = 2;               // blue
-
 int SAMPLE_RATE_HZ = 1000;
 const int FFT_SIZE = 256;
 
@@ -64,6 +59,11 @@ void initTick(){
   analogReadAveraging(ANALOG_READ_AVERAGING);                   //Tells the Teensy to average X number of samples per each sample.
 }
 
+void initThump() {
+  pinMode(thumper, OUTPUT);
+  pinMode(mic, INPUT);
+}
+
 void turnItOn() {
   // Turn the Tick Tracer On
   digitalWrite(tickButton, HIGH);
@@ -72,18 +72,6 @@ void turnItOn() {
   delay(1000);
 }
 
-bool tickIt() {
-  // ignore first reading
-  getTick();
-  
-  if (getTick() > 500)
-    return true;
-  else
-    return false;
-  
-}
-
-// This is the function to call to run the tick tracer
 int getTick(){
   sampleSource = tickPin;
   // Start Sampling
@@ -101,51 +89,21 @@ int getTick(){
    return (int)magnitudes[15];
 }
 
-int thumpAnalog() {
-  int counter = 0;
-  int arrayIndex = 20000;
-  int getData[arrayIndex];
-
-  digitalWrite(thumper, HIGH);
-  delay(25);
-
-  for (int i = 0; i < arrayIndex; i++) {
-    getData[i] = analogRead(9);       //sample data
-    if (getData[i] > 600|| getData[i] < 400)         //if the sampled data is greater than threshold increase counter
-    counter++;
-  }
-  delay(100);
+bool tickIt() {
+  // ignore first reading
+  getTick();
   
-  digitalWrite(thumper,LOW);     //take it up
-  delay(500);
-  Serial.print("Counter = ");
-  Serial.println(counter);          //Display counter. It is different for hollow and foam
-
-  if (counter < 2000) {
-    
-    Serial.println("Its solid babe!");
-    return SOLID;
-    
-  } else if (counter < 2500) {
-    
-     Serial.println("Don't kill me!");
-     return WIRED;
-     
-  } else {
-    
-     Serial.println("It smells fishy in here!");
-     return HOLLOW;
-  }
+  if (getTick() > 300)
+    return true;
+  else
+    return false;
+  
 }
 
 int thump() {
-  
+  delay(250);
   digitalWrite(thumper, HIGH);
-  delay(200);
-  digitalWrite(thumper, LOW);
-  delay(200);
-  digitalWrite(thumper, HIGH);
-  delay(200);
+  delay(25);
   
   sampleSource = mic; 
   
@@ -163,24 +121,24 @@ int thump() {
 
 
   int sum = 0;
-  int sum1 = 0;
+  int intervalSum = 0;
   
-  for(int i = 20; i < 50; i++){
+  for(int i = 20; i < 60; i++){
    sum += magnitudes[i];
   }
 
 
-  // DEBUG displays the entire bin
-  for (int i = 1; i < 256; i++) {
-    sum1 += magnitudes[i];
-    if(i % 10 == 0) {
-      Serial.print("Sum to ");
-      Serial.print(i);
-      Serial.print(" : ");
-      Serial.println(sum1);
-      sum1 = 0;
-    }
-  }
+//  /* DEBUG displays the entire bin*/
+//  for (int i = 1; i < 256; i++) {
+//    intervalSum += magnitudes[i];
+//    if(i % 10 == 0) {
+//      Serial.print("Sum to ");
+//      Serial.print(i);
+//      Serial.print(" : ");
+//      Serial.println(intervalSum);
+//      intervalSum = 0;
+//    }
+//  }
   
   Serial.println();
   Serial.println(sum);
@@ -189,7 +147,7 @@ int thump() {
   digitalWrite(thumper,LOW); 
   delay(1000);
 
-  if (sum < 5000) {
+  if (sum < 42000) {
     
     Serial.println("Its solid!");
     return SOLID;
@@ -197,6 +155,39 @@ int thump() {
   } else {
     
      Serial.println("It's hollow!");
+     return HOLLOW;
+  }
+}
+
+int thumpAnalog() {
+  int counter = 0;
+  int arrayIndex = 20000;
+  int getData[arrayIndex];
+
+  digitalWrite(thumper, HIGH);
+  delay(25);
+
+  for (int i = 0; i < arrayIndex; i++) {
+    getData[i] = analogRead(9);       //sample data
+    if (getData[i] > 900|| getData[i] < 100)         //if the sampled data is greater than threshold increase counter
+    counter++;
+  }
+  delay(100);
+  
+  digitalWrite(thumper,LOW);     //take it up
+  delay(500);
+  Serial.print("Counter = ");
+  Serial.println(counter);          //Display counter. It is different for hollow and foam
+
+  // Threshhold for cell
+  if (counter < 2000) {
+    
+    Serial.println("Solid!");
+    return SOLID;
+    
+  } else {
+    
+     Serial.println("Hollow!");
      return HOLLOW;
   }
 }

@@ -35,18 +35,55 @@ NewPing sonar[8] = {
  * Ultraonic method for alignment
  */
 
-void pan (const int dir, int destination){
+float getDis(const int dir){
+  
   int a = 0, b = 0;
-  int dis = 0;
-
-  if (dir == FRONT){
-
+  float dis = 0;
+  
+  if(dir == FRONT){
     a = sonar[1].ping_median(7);
     b = sonar[3].ping_median(7);
+    
+    // ((a + b) / 2 - offset) / per Inch
+    dis = (float)((a + b) / 2) / 152.64;
+    
+  } else if(dir == REAR){
+    a = sonar[5].ping_median(7);
+    b = sonar[7].ping_median(7);
+    
+    // ((a + b) / 2 - offset) / per Inch
+    dis = (float)((a + b) / 2) / 150;
+    
+  } else if(dir == LEFT){
+    a = sonar[0].ping_median(7);
+    b = sonar[4].ping_median(7);
 
     // ((a + b) / 2 - offset) / per Inch
-    dis = ((a + b) / ( 2 * 142)) - 1;
+    dis = (float)((a + b) / 2) / 151;
+    
+  } else if(dir == RIGHT){
+    a = sonar[2].ping_median(7);
+    b = sonar[6].ping_median(7);
+    
+    // ((a + b) / 2 - offset) / per Inch
+    dis = (float)((a + b) / 2) / 153;
+  }
 
+  Serial.print("a = ");
+  Serial.print(a);
+  Serial.print(" b = ");
+  Serial.println(b);
+  Serial.print(" dis = ");
+  Serial.println(dis);
+    
+  return dis;
+}
+
+void pan (const int dir, float destination){
+  float dis = getDis(dir);
+
+  if (dir == FRONT){
+    
     if (destination > dis) {
       go(REAR, (destination - dis));
     
@@ -54,13 +91,17 @@ void pan (const int dir, int destination){
       go(FRONT, (dis - destination));
     }
     
+  } else if (dir == REAR) {
+    
+    if (destination > dis) {
+      go(FRONT, (destination - dis));
+    
+    } else {
+      go(REAR, (dis - destination));
+    }
+     
   } else if (dir == LEFT) {
-    a = sonar[0].ping_median(7);
-    b = sonar[4].ping_median(7);
-
-    // ((a + b) / 2 - offset) / per Inch
-    dis = ((a + b) / ( 2 * 142)) - 1;
-
+    
     if (destination > dis) {
       go(SRIGHT, (destination - dis));
     
@@ -70,11 +111,6 @@ void pan (const int dir, int destination){
   
   } else if (dir == RIGHT) {
 
-    a = sonar[2].ping_median(7);
-    b = sonar[6].ping_median(7);
-
-    dis = (a + b) / (2 * 154) - 1;
-
     if (destination > dis) {
       go(SLEFT, (destination - dis));
     
@@ -82,12 +118,7 @@ void pan (const int dir, int destination){
       go(SRIGHT, (dis - destination));
     }
   }
-
-  Serial.print("a = ");
-  Serial.print(a);
-  Serial.print(" b = ");
-  Serial.println(b);
-  Serial.print("dest = ");
+  
   Serial.print(destination);
   Serial.print(" dis = ");
   Serial.println(dis);
@@ -162,13 +193,12 @@ int align(const int dir) {
  
 }
 
-// correct the placement within the grid with this method
-
 void correct (int x, int y) {
+  delay(200);
   int cnt = 0;
   int dir;
   
-  if(x < (ROWS / 2))
+  if(x <= (ROWS / 2))
     dir = LEFT;
   else
     dir = RIGHT;
@@ -177,13 +207,25 @@ void correct (int x, int y) {
     cnt++;
     if (cnt > 3) break;
   }
+  delay(200);
 }
 
 void correctPan (int x, int y) {
-  if (x <= (ROWS / 2)){
-    pan(LEFT, (x * 12) + 2);
+  delay(200);
+  if (x <= (ROWS / 2)) {
+    pan(LEFT, (x * 12) + 2.3);
+  
   } else {
-    pan(RIGHT, ((ROWS - x) * 12) + 2);
+    pan(RIGHT, ((ROWS + 1 - x) * 12) + 2.3);
   }
+
+  if (y <= 3) {
+    pan(REAR, (y * 12) + 1.35);
+  
+  } else {
+    pan(FRONT, ((COLS + 1 - y) * 12) + 1.35);
+    
+  }
+  delay(200);
 }
 

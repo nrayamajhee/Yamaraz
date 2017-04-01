@@ -13,8 +13,15 @@
  * Nishan Rayamajhee
  */
 
-const int ROWS = 6;
-const int COLS = 6;
+// grid property
+const int ROWS = 5;
+const int COLS = 5;
+
+// the flags representing solid, wired and hollow state.
+const int SOLID   = 0; // represented by green
+const int WIRED   = 1;                // red
+const int HOLLOW  = 2;               // blue
+
 
 // direction flags
 const int FRONT    = 0;
@@ -30,7 +37,7 @@ const int SRIGHT   = 5;
 const int tickButton = 0;
 const int thumper    = 1;
 const int LEDpin     = 2;
-//...
+
 const int echoFL = 3;
 const int trigFL = 4;
 const int echoFR = 5;
@@ -39,7 +46,7 @@ const int echoRL = 7;
 const int trigRL = 8;
 const int echoRR = 9;
 const int trigRR = 10;
-//...
+
 const int SRR = 11;
 const int DRR = 12;
 // tic tracer 3.3 volts
@@ -59,7 +66,6 @@ const int MS2 = 32;
 // Microphone 3.3V
 const int mic     = 23;
 const int tickPin = 22;
-//...
 const int echoFFL = 21;
 const int trigFFL = 20;
 const int echoFFR = 19;
@@ -69,20 +75,19 @@ const int trigRRL = 16;
 const int echoRRR = 15;
 const int trigRRR = 14;
 
-
 // These are the calibartion value for motors
-int linear     = 435 * 2; // per inch
+int linear     = 870;     // per inch
 int lateral    = 454 * 2; // per inch
 int diagonal   = 646 * 2; // per inch
 int rotational = 23 * 2;  // per degree
 
 // speed and acceleartion
-const int TOP_SPEED = 50;
+const int TOP_SPEED = 60;
 int spd = TOP_SPEED * 9;
 const int ACCEL_RANGE = TOP_SPEED * 8;
 
 /* 
- *  ==============
+ * ==============
  * --------------
  * Initialization
  * --------------
@@ -192,7 +197,7 @@ void setDirection (const int dir) {
  *             go (SFLEFT, 12); // strafe left 12 inches
  ***********************/
 
-void go (const int dir, int val) {
+void go (const int dir, float val) {
   // reset the speed
   spd = TOP_SPEED * 9;
 
@@ -208,7 +213,7 @@ void go (const int dir, int val) {
 
     // val is in inches
     // 1 inch requires 435 steps
-    steps = linear * val;
+    steps = (float)linear * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -240,7 +245,7 @@ void go (const int dir, int val) {
 
     // val is in degrees
     // 1 deg requires 23 steps
-    steps = rotational * val;
+    steps = (float)rotational * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -273,7 +278,7 @@ void go (const int dir, int val) {
 
     // val is in inches
     // 1 inch requires 454 steps
-    steps = lateral * val;
+    steps = (float)lateral * val;
 
     // start moving
     for (int i = 0; i < steps; i++) {
@@ -312,7 +317,7 @@ void go (const int dir, int val) {
  * Example:    goDiag (FRONT, RIGHT, 16); // 16 inches to NorthEast             
  **************************************/
 
-void goDiag (const int dir1, const int dir2, int val) {
+void goDiag (const int dir1, const int dir2, float val) {
   // reset the speed
   spd = TOP_SPEED * 9;
   
@@ -321,7 +326,7 @@ void goDiag (const int dir1, const int dir2, int val) {
   
   // val is in inches
   // 1 inch requires 646 steps
-  int steps = diagonal * val;
+  int steps = (float)diagonal * val;
 
   if (dir2 == LEFT) {
     
