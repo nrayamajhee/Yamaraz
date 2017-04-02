@@ -43,6 +43,12 @@ float getDis(const int dir){
   if(dir == FRONT){
     a = sonar[1].ping_median(7);
     b = sonar[3].ping_median(7);
+
+    if (abs(a-b) > 50) {
+      go(FRONT, 2);
+      a = sonar[1].ping_median(7);
+      b = sonar[3].ping_median(7);
+    }
     
     // ((a + b) / 2 - offset) / per Inch
     dis = (float)((a + b) / 2) / 152.64;
@@ -152,6 +158,9 @@ int align(const int dir) {
 
     deg = (180 / 3.14) * asin((double)diff / 1050);
 
+    // bad logic
+    if(deg > 10) deg = 0;
+    
     if (a > b) {
       go(RIGHT, deg); 
     } else if (b > a) {
@@ -164,7 +173,9 @@ int align(const int dir) {
     int diff = abs(b-a) - 4; // 4 is the difference in reading between the left sensors
 
     deg = (180 / 3.14) * asin((double)diff / 1050);
-
+    
+    if(deg > 10) deg = 0;
+    
     if (a > b) {
       go(LEFT, deg); 
     } else if (b > a) {
@@ -203,29 +214,68 @@ void correct (int x, int y) {
   else
     dir = RIGHT;
     
-  while (align(dir) < 20) {
+  while (align(dir) < 5) {
     cnt++;
     if (cnt > 3) break;
   }
   delay(200);
 }
 
-void correctPan (int x, int y) {
-  delay(200);
-  if (x <= (ROWS / 2)) {
-    pan(LEFT, (x * 12) + 2.3);
-  
-  } else {
-    pan(RIGHT, ((ROWS + 1 - x) * 12) + 2.3);
-  }
-
-  if (y <= 3) {
-    pan(REAR, (y * 12) + 1.35);
-  
-  } else {
-    pan(FRONT, ((COLS + 1 - y) * 12) + 1.35);
-    
-  }
-  delay(200);
-}
+//void correctPan (int x, int y) {
+//  delay(200);
+//  if (x <= (ROWS / 2)) {
+//    pan(LEFT, (x * 12) + 2.3);
+//  
+//  } else {
+//    pan(RIGHT, ((ROWS + 1 - x) * 12) + 2.3);
+//  }
+//
+//  if (y <= 4) {
+//    pan(REAR, (y * 12) + 1.35);
+//
+//    if(getDis(REAR);
+//    
+//  
+//  } else {
+//    pan(FRONT, ((COLS + 1 - y) * 12) + 1.35);
+//    
+//  }
+//  delay(200);
+//}
+//
+//bool obstacle(x, y) {
+//  if (x==1 && y < 5) {
+//    align(LEFT);
+//    align(LEFT);
+//    pan(REAR, (y * 12) + 1.35);
+//    
+//    // yes there is obstacle
+//    if(getDis(FRONT) < 6){
+//      go(SRIGHT, 12);
+//      go(FRONT, 24);
+//      go(SLEFT, 12);
+//
+//      return true;
+//      
+//    } else {
+//      return false;
+//    }
+//    
+//  } if (x == 1 && y == 5) {
+//    align(LEFT);
+//    align(LEFT);
+//    pan(TOP, 13.35);
+//   
+//    // yes there is obstacle
+//    if(getDis(RIGHT) < 6){
+//      go(REAR, 24);
+//      go(SRIGHT, 12);
+//
+//      return true;
+//      
+//    } else {
+//      return false;
+//    }
+//  }
+//}
 

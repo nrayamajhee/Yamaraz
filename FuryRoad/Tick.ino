@@ -147,7 +147,7 @@ int thump() {
   digitalWrite(thumper,LOW); 
   delay(1000);
 
-  if (sum < 42000) {
+  if (sum < 50000) {
     
     Serial.println("Its solid!");
     return SOLID;
@@ -169,7 +169,7 @@ int thumpAnalog() {
 
   for (int i = 0; i < arrayIndex; i++) {
     getData[i] = analogRead(9);       //sample data
-    if (getData[i] > 900|| getData[i] < 100)         //if the sampled data is greater than threshold increase counter
+    if (getData[i] > 700|| getData[i] < 300)         //if the sampled data is greater than threshold increase counter
     counter++;
   }
   delay(100);
@@ -180,7 +180,7 @@ int thumpAnalog() {
   Serial.println(counter);          //Display counter. It is different for hollow and foam
 
   // Threshhold for cell
-  if (counter < 2000) {
+  if (counter < 110) {
     
     Serial.println("Solid!");
     return SOLID;

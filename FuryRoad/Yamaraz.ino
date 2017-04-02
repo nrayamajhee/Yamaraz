@@ -17,13 +17,21 @@
  * Yamaraz shall rule the Fury Road
  */
 
+
+// 6.8 front front grabber;
+
+int dispMatrix[7][7];
+
+int end1[] = {-1, -1};
+int end2[] = {-1, -1};
+bool doneEnd = false;
+
 void setup() {
   initYamaraz();
   gridSearch();
-//  routine(3,3);
-//go (FRONT, 12);
-//routine(1,3);
-//turnItOn();
+//  thump();
+//openLid();
+//returnHome();
 }
 
 /*
@@ -33,10 +41,15 @@ void setup() {
 void loop() {
   // make sure to uncomment code at setup
   // before testing
-//pan(FRONT, 24);
-//getDis(FRONT);
-//getDis(REAR);
-//Serial.println(getTick());
+//  openLid();
+}
+
+void initYamaraz() {
+  initPins();
+  lightUp();
+  initTick();
+  initThump();
+  resetM();
 }
 
 /*
@@ -48,7 +61,7 @@ void gridSearch() {
   int x = 0;
   int y = 0;
 
-  lightOn(x, y, GREEN);
+  lightOn(0, 0, YELLOW);
   // turn the tick tracer on
   turnItOn();
   
@@ -76,29 +89,84 @@ void gridSearch() {
       }
     }
 
+
     routine(x, y);
-    go (SRIGHT, 12);
+    if(x < ROWS){
+      go (SRIGHT, 12); 
+    } else {
+//      gotoEnd();
+      returnHome();
+    }
     
   }// end of lap
 }
 
+void gotoEnd() {
+  routine(end1[0] + 1, end1[1] + 1);
+  correct(end1[0] + 1, end1[1] + 1);
+  routine(end1[0], end1[1]);
+  go(REAR, 4);
+  openLid();
+  
+  pinMode(33, OUTPUT);
+  pinMode(34, INPUT);
+  digitalWrite(33, HIGH);
+  delay(5000);
+  digitalWrite(33, LOW);
+  
+  if(digitalRead(34) == HIGH){
+    routine(1, 1);
+    goDiag(REAR, LEFT, 19);
+  }
+  else
+  { 
+    routine(end2[0] + 1, end2[1] + 1);
+    correct(end2[0] + 1, end2[1] + 1);
+    routine(end2[0], end2[1]);
+    openLid();
+    
+    digitalWrite(33, HIGH);
+    delay(5000);
+    returnHome();
+  }
+}
 
-void returnHome(int x, int y) {
-  go(LEFT, x-1);
-  go(REAR, y-1);
-  goDiag(REAR, LEFT, 19);
+void returnHome() {
+  
+//  correctPan(1, 1);
+//  correct(1,1);
+//  correctPan(1, 1);
+//  correctPan(1, 1);
+//  correct(1,1);
+  go(LEFT, 90);
+  go(FRONT, 48);
+  align(RIGHT);
+  go(LEFT, 90);
+  go(FRONT, 48);
 }
 
  
 void routine(int x, int y) {
-//  Serial.print(x);
-//  Serial.print(" ");
-//  Serial.println(y);
-  correct(x, y);
-  correctPan(x, y);
-  detect(x, y);
 
-//  handleObstacle();
+  Serial.print("(");
+  Serial.print(x);
+  Serial.print(" ");
+  Serial.println(y);
+  Serial.println(")");
+
+  if( x != 3 && (y != 5 || y != 4))
+    correct(x, y);
+   
+//  correctPan(x, y);
+  detect(x, y);
+  
+  for(int x = 0; x < 7; x++){
+    for(int y = 0; y < 7; y++){
+      Serial.print(dispMatrix[x][y]);
+      Serial.print("  ");
+    }
+    Serial.println();
+  }
 }
 
 void detect(int x, int y) {
@@ -106,6 +174,45 @@ void detect(int x, int y) {
   
   if(tickIt() == WIRED){
     lightOn(x, y, RED);
+    dispMatrix[x][y] = WIRED;
+    
+    if (x == 1){
+      go(SLEFT, 11);
+      if(tickIt() == WIRED)
+        lightOn(0, y, RED);
+      go(SRIGHT, 11);
+      
+      correct(x,y);
+//      correctPan(x,y);
+
+    } else if (x == 5){
+      go(SRIGHT, 11);
+      if(tickIt() == WIRED)
+        lightOn(6, y, RED);
+      go(SLEFT, 11);
+      
+      correct(x,y);
+//      correctPan(x,y);
+    }
+
+    if (y == 1){
+      go(REAR, 11);
+      if(tickIt() == WIRED)
+        lightOn(x, 0, RED);
+      go(FRONT, 11);
+      
+      correct(x,y);
+//      correctPan(x,y);
+      
+    } else if (y == 5) {
+      go(FRONT, 11);
+      if(tickIt() == WIRED)
+        lightOn(x, 6, RED);
+      go(REAR, 11);
+      
+      correct(x,y);
+//      correctPan(x,y);
+    }
   
   } else {
     if(x == 2){
@@ -122,24 +229,46 @@ void detect(int x, int y) {
 
     if (t1 == HOLLOW && t2 == HOLLOW){
       lightOn(x, y, BLUE);
+       dispMatrix[x][y] = 8;
     }
     else if (t1 == SOLID && t2 == SOLID) {
       lightOn(x, y, BLACK);
     }
     else {
-      if( thump() == HOLLOW){
-        lightOn(x, y, BLUE);
-      } else {
         lightOn(x, y, BLACK);
-      }
     }
   }
 }
 
-void initYamaraz() {
-  initPins();
-  lightUp();
-  initTick();
-  initThump();
-  lightUp();
+void resetM() {
+  for(int x = 0; x < 7; x++){
+    for(int y = 0; y < 7; y++){
+      dispMatrix[x][y] = SOLID;
+    }
+  }
 }
+
+
+//  int neighbours = 0;
+//  for(int x = 0; x < 7; x++){
+//    for(int y = 0; y < 7; y++){
+//      if(dispMatrix[x][y] == WIRED){
+//        
+//        if(dispMatrix[x][y+1]){
+//          neighbours++;
+//        }
+//        if(dispMatrix[x+1][y]){
+//          neighbours++;
+//        }
+//        if(dispMatrix[x][y-1]){
+//          neighbours++;
+//        }
+//        if(dispMatrix[x-1][y]){
+//          neighbours++;
+//        }
+//      }
+//    }
+//
+//    Serial.println();
+//  }
+

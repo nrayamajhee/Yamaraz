@@ -82,7 +82,7 @@ int diagonal   = 646 * 2; // per inch
 int rotational = 23 * 2;  // per degree
 
 // speed and acceleartion
-const int TOP_SPEED = 60;
+const int TOP_SPEED = 65;
 int spd = TOP_SPEED * 9;
 const int ACCEL_RANGE = TOP_SPEED * 8;
 
