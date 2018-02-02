@@ -28,6 +28,7 @@ bool doneEnd = false;
 
 void setup() {
   initYamaraz();
+  go(FRONT, 12);
   gridSearch();
 //  thump();
 //openLid();

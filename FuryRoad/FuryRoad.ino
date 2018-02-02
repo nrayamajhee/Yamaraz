@@ -375,4 +375,3 @@ void goDiag (const int dir1, const int dir2, float val) {
     }
   }
 }
-
