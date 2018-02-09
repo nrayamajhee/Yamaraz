@@ -1,9 +1,10 @@
 struct Motors {
   volatile bool running;
-  int distance;
+  volatile int distance;
+  volatile int speed;
 };
 
-Motors motors = {false, 0};
+Motors motors = {false, 0, 0};
 
 enum Direction {
   front,
@@ -31,6 +32,7 @@ void setTimers(int msDelay) {
 ISR(TIMER3_COMPA_vect) {
   if (motors.running) {
     PORTL ^= 0x55;
+    motors.distance++;
   }
 }
 
@@ -54,14 +56,40 @@ void initPorts() {
 void initRobot() {
   Serial.begin(9600);
   initTimers();
-  setTimers(500);
+  setTimers(motors.speed);
   initPorts();
+}
+
+//acceleration function
+void go(int inches){
+  int steps = inches * 870;     //870 is calibrated value
+  motors.speed = 1200;
+  motors.running = true;
+  while(motors.distance <= steps){
+
+    
+    if(motors.distance <= ((int)(0.2 * steps)) && (motors.speed > 300)){
+      Serial.println("Reached if");
+      motors.speed -= 6;    //exponential banaune
+      setTimers(motors.speed);
+    }
+    if(motors.distance >= ((int)(0.8 * steps))){
+      Serial.println("Reached deacce");
+      setTimers(motors.speed += 4);   //exponential banaune
+    }
+    //do nothing
+    if(motors.distance >= steps){
+      motors.running = false;
+      motors.distance = 0;
+    }
+  }
 }
 
 void setup() {
   initRobot();
-  setDirection(left);
-  motors.running = true;
+  setDirection(back);
+  delay(500);
+  go(15);
 }
 
 void loop()
