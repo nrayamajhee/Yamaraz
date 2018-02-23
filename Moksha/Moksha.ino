@@ -27,7 +27,8 @@
  * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * ON ANY THEORY OF LIABILI
+    }TY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
@@ -74,6 +75,7 @@ struct Debug {
   bool ir;
   bool motion;
 };
+Debug debug   = {0, 1, 0};
 /*
  * The IR structure provides RAW sensor values and values filtered as ON or OFF
  */
@@ -81,6 +83,7 @@ struct IR {
   unsigned int  sensorValues  [NUM_SENSORS];
   bool          filteredValues[NUM_SENSORS];
 };
+IR ir = {0, 0};
 /*
  * The Motors have many states. All of these are mutable and are
  * updated by the interrupt service routines ISR on TIMER 3 and 4
@@ -94,11 +97,6 @@ struct Motors {
   volatile int speed;
   volatile float alignRatio;
 };
-/*
- * Instantiate these structs
- */
-Debug debug   = {1, 1};
-IR    ir      = {0, 0};
 Motors motors = {
   false, 0 , 0,
   600,  // to mils delay
@@ -145,7 +143,7 @@ void setTimers(Direction dir, int msDelay) {
   else if (dir == ALL) {
     OCR3A  = 8 * msDelay;
     OCR4A  = 8 * msDelay;
-  }   
+  }
 }
 /*
  * ISR for timer 3 LEFT MOTORS
@@ -223,14 +221,14 @@ void setDirection(Direction dir) {
     PORTL = 0xA0;
   } else if (dir == BACK) {
     PORTL = 0x0A;
-  } else if (dir == LEFT) {
-    PORTL = 0x88;
-  } else if (dir == RIGHT) {
-    PORTL = 0x22;
   } else if (dir == SLEFT) {
-    PORTL = 0x22;
+    PORTL = 0x88;
   } else if (dir == SRIGHT) {
     PORTL = 0x22;
+  } else if (dir == LEFT) {
+    PORTL = 0x00;
+  } else if (dir == RIGHT) {
+    PORTL = 0xAA;
   }
 }
 /*
@@ -242,13 +240,16 @@ void setDirection(Direction dir) {
  * and degrees for
  * left and right
  */
-void go(Direction dir, int amount){
+void go(Direction dir, int amount, bool correct){
   setDirection(dir);
-  if(dir == LEFT || dir == RIGHT){
-    motors.totalSteps = amount * 870; // linear calibration
+  if (dir == FRONT || dir == BACK){
+    motors.totalSteps = amount * 215; // linear calibration
+    
+  } else if(dir == SLEFT || dir == SRIGHT){
+    motors.totalSteps = amount * 800; // strafing calibration
     
   } else {
-    motors.totalSteps = amount * 870; // angular calibration
+    motors.totalSteps = (int)ceil(amount * 24.5); // angular calibration
   }
   
   if(debug.motion){
@@ -264,27 +265,30 @@ void go(Direction dir, int amount){
   motors.speed = motors.minSpeed;
   motors.running = true;
 
-  //while(motors.running == true) {
-  while(true){
+  while(motors.running == true) {
     IR_filter();
-    
-    if(ir.filteredValues[3] || ir.filteredValues[4]){
-      motors.alignRatio = 1;
-      
-    } else if (ir.filteredValues[0] || ir.filteredValues[1]) {
-      motors.alignRatio = 0.7; 
-      
-    } else if (ir.filteredValues[1] || ir.filteredValues[2]) {
-      motors.alignRatio = 0.9;
-      
-    } else if (ir.filteredValues[5] || ir.filteredValues[6]) {
-      motors.alignRatio = 1.1;
-      
-    } else if (ir.filteredValues[6] || ir.filteredValues[7]) {
-      motors.alignRatio = 1.3;
+    if(correct) {
+      int left = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
+      int right = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
+      Serial.println(left);
+      Serial.println(right);
+//      if(ir.filteredValues[3] || ir.filteredValues[4]){
+//        motors.alignRatio = 1;
+//        
+//      } else if (ir.filteredValues[0] || ir.filteredValues[1]) {
+//        motors.alignRatio = 0.7; 
+//        
+//      } else if (ir.filteredValues[1] || ir.filteredValues[2]) {
+//        motors.alignRatio = 0.9;
+//        
+//      } else if (ir.filteredValues[5] || ir.filteredValues[6]) {
+//        motors.alignRatio = 1.1;
+//        
+//      } else if (ir.filteredValues[6] || ir.filteredValues[7]) {
+//        motors.alignRatio = 1.3;
+//      }
     }
-    
-    Serial.println(motors.alignRatio);
+    //Serial.println(motors.alignRatio);
   }
 }
 /*
@@ -320,16 +324,33 @@ void initialize() {
  * ==============================================
  * All high level scripting goes below this line.
  * 
- */
-void beginCourse() {
-} 
+ */ 
 void goTo(Compass direction, int steps) {
+  go(RIGHT, direction * 45, false);
+  delay(500);
+  go(FRONT, 13 * steps, true);
+  delay(500);
+  go(LEFT, 180, false);
+  delay(500);
+  go(FRONT, 13 * steps, true);
+  delay(500);
+  go(RIGHT, 135, false);
+  delay(500);
+}
+void beginCourse() {
+  go(FRONT, 41, false);
+  delay(500);
+  for(int i = 1; i < 8; i++) {
+    goTo(i, 2);
+    delay(500);
+  }
 }
 void returnHome() {
 }
 void setup() {
   initialize();
-  go(FRONT, 15);
+  //beginCourse();
+  go(FRONT, 2000, true);
 }
 // loops seems to break with IRS,
 // might behave in undefined ways
