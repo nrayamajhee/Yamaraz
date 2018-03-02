@@ -54,13 +54,21 @@ enum Direction {
 };
 enum Compass {
   NORTH,  // white
-  NEAST,  // cyan
-  EAST,   // purple
-  SEAST,  // yellow
+  NEAST,  // red
+  EAST,   // green
+  SEAST,  // blue
   SOUTH,  // white
-  SWEST,  // blue
-  WEST,   // green
-  NWEST   // red
+  SWEST,  // yellow
+  WEST,   // purple
+  NWEST   // skyblue
+};
+enum Color {
+  RED,
+  GREEN,
+  BLUE,
+  YELLOW,
+  PURPLE,
+  SKYBLUE
 };
 /*
  * QTRSensor 8 IR with EMITTER
@@ -91,7 +99,7 @@ IR ir = {0, 0};
 struct Motors {
   volatile bool running;
   volatile int steps;
-  volatile int totalSteps;
+  volatile long totalSteps;
   int maxSpeed;
   int minSpeed;
   volatile int speed;
@@ -185,12 +193,12 @@ ISR(TIMER4_COMPA_vect) {
     PORTL ^= 0x50;
     setTimers(RIGHT, motors.alignRatio * motors.speed);
     if(debug.steps) {
-      Serial.print(" | ");
-      Serial.print(motors.totalSteps);
-      Serial.print(" # ");
-      Serial.print(motors.steps);
-      Serial.print(" : ");
-      Serial.println(motors.speed);
+//      Serial.print(" | ");
+//      Serial.print(motors.totalSteps);
+//      Serial.print(" # ");
+//      Serial.print(motors.steps);
+//      Serial.print(" : ");
+//      Serial.println(motors.speed);
     }
   }
 }
@@ -204,11 +212,12 @@ void IR_filter() {
   }
   if(debug.ir){
     for (unsigned char i = 0; i < NUM_SENSORS; i++) {
-      Serial.print(ir.filteredValues[i]);
-      Serial.print('\t');
+      //Uncomment this
+//      Serial.print(ir.filteredValues[i]);
+//      Serial.print('\t');
     }
   }
-  Serial.println();
+  //Serial.println();
   delay(250);
 }
 /*
@@ -243,13 +252,14 @@ void setDirection(Direction dir) {
 void go(Direction dir, int amount, bool correct){
   setDirection(dir);
   if (dir == FRONT || dir == BACK){
-    motors.totalSteps = amount * 215; // linear calibration
-    
+    Serial.println("Reached go");
+    //motors.totalSteps = amount; // linear calibration
+    motors.totalSteps = amount * 216; // linear calibration
   } else if(dir == SLEFT || dir == SRIGHT){
     motors.totalSteps = amount * 800; // strafing calibration
     
   } else {
-    motors.totalSteps = (int)ceil(amount * 24.5); // angular calibration
+    motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
   }
   
   if(debug.motion){
@@ -270,8 +280,8 @@ void go(Direction dir, int amount, bool correct){
     if(correct) {
       int left = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
       int right = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
-      Serial.println(left);
-      Serial.println(right);
+//      Serial.println(left);
+//      Serial.println(right);
 //      if(ir.filteredValues[3] || ir.filteredValues[4]){
 //        motors.alignRatio = 1;
 //        
@@ -325,32 +335,123 @@ void initialize() {
  * All high level scripting goes below this line.
  * 
  */ 
-void goTo(Compass direction, int steps) {
+Color coinColor;
+
+//for demo
+int p = -1;
+ 
+void returnHome(int direction, int steps) {
+  Serial.println("Reached returnHome");
+  go(RIGHT, 180, false);  //Turn around
+  delay(500);
+  go(FRONT, steps, false);
+  delay(500);
+  go(RIGHT, 180 - (direction * 45), false);
+}
+
+void getCoin(){
+    //Write code that will use line sensors to detect coin
+    //Use buffer to avoid errors
+    //picUpCoin();
+    //returnHome should be here
+}
+ 
+void goTo(int direction, int steps) {
+  Serial.println("Reached goTo");
   go(RIGHT, direction * 45, false);
   delay(500);
-  go(FRONT, 13 * steps, true);
+  go(FRONT, steps, true);
   delay(500);
-  go(LEFT, 180, false);
-  delay(500);
-  go(FRONT, 13 * steps, true);
-  delay(500);
-  go(RIGHT, 135, false);
-  delay(500);
+  returnHome(direction, steps);
+  Color colors[6] = {RED, GREEN, SKYBLUE, BLUE, RED, PURPLE};
+  p = p+1;
+  coinColor = colors[p];
+  Serial.print("CoinColor: ");
+  Serial.println(coinColor);
 }
-void beginCourse() {
+
+void goToRed(){
+  go(RIGHT, 3 * 45, false);
+  delay(500);
+  go(FRONT, 52, false);
+  delay(500);
+  returnHome(3, 52);
+}
+
+void goToGreen(){
+  go(RIGHT, 2 * 45, false);
+  delay(500);
   go(FRONT, 41, false);
   delay(500);
-  for(int i = 1; i < 8; i++) {
-    goTo(i, 2);
-    delay(500);
+  returnHome(2, 41);
+}
+
+void goToBlue(){
+  go(RIGHT, 1 * 45, false);
+  delay(500);
+  go(FRONT, 52, false);
+  delay(500);
+  returnHome(1, 52);
+}
+
+void goToYellow(){
+  go(RIGHT, 7 * 45, false);
+  delay(500);
+  go(FRONT, 52, false);
+  delay(500);
+  returnHome(7, 52);
+}
+
+void goToPurple(){
+  go(RIGHT, 6 * 45, false);
+  delay(500);
+  go(FRONT, 41, false); 
+  delay(500);
+  returnHome(6, 41);
+}
+
+void goToSkyBlue(){
+  go(RIGHT, 5 * 45, false);
+  delay(500);
+  go(FRONT, 52, false);   
+  delay(500);
+  returnHome(5, 52);
+}
+
+void robotAutonimiouso(){
+  if(coinColor == RED){
+    goToRed();  
+  }else if(coinColor == GREEN){
+    goToGreen();
+  }else if(coinColor == BLUE){
+    goToBlue();
+  }else if(coinColor == YELLOW){
+    goToYellow();
+  }else if(coinColor == PURPLE){
+    goToPurple();
+  }else if(coinColor == SKYBLUE){
+    goToSkyBlue();
   }
 }
-void returnHome() {
+
+void beginCourse() {
+  go(FRONT, 43.5, false);
+  for(int i = 1; i <=8; i++){
+    Serial.println("Reached for loop");
+    Serial.print("i: ");
+    Serial.println(i);
+    if((i!=4)&&(i!=8)){
+      goTo(i, 11.7);
+      delay(500);
+      robotAutonimiouso();
+    }
+  }
 }
+
 void setup() {
   initialize();
-  //beginCourse();
-  go(FRONT, 2000, true);
+  beginCourse();
+  //go(FRONT, 2000, true);
 }
 // loops seems to break with IRS,
 // might behave in undefined ways
