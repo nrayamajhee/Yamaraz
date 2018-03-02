@@ -33,6 +33,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <QTRSensors.h>
+#include <Servo.h>
 #define NUM_SENSORS   8
 #define TIMEOUT       2500
 #define EMITTER_PIN   2
@@ -75,6 +76,11 @@ enum Color {
  */
 QTRSensorsRC qtrrc((unsigned char[]) {22, 23, 24, 25, 26, 27, 28, 29},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN);
+
+Servo myservo;  // create servo object to control a servo
+
+int servoPosition = 0;    // variable to store the servo position
+  
  /*
   * Debug flags
   */
@@ -300,30 +306,9 @@ void go(Direction dir, int amount, bool correct){
       if(onCount > 2){
         newAverage = 4.5;
       }
-      motors.alignRatio = 1 + ( newAverage - 4.5) * .08;        //1 is calibrated value
+      motors.alignRatio = 1 + ( newAverage - 4.5) * .08;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
       Serial.println(motors.alignRatio);
     }
-//      int left = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
-//      int right = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
-//      Serial.println(left);
-//      Serial.println(right);
-//      if(ir.filteredValues[3] || ir.filteredValues[4]){
-//        motors.alignRatio = 1;
-//        
-//      } else if (ir.filteredValues[0] || ir.filteredValues[1]) {
-//        motors.alignRatio = 0.7; 
-//        
-//      } else if (ir.filteredValues[1] || ir.filteredValues[2]) {
-//        motors.alignRatio = 0.9;
-//        
-//      } else if (ir.filteredValues[5] || ir.filteredValues[6]) {
-//        motors.alignRatio = 1.1;
-//        
-//      } else if (ir.filteredValues[6] || ir.filteredValues[7]) {
-//        motors.alignRatio = 1.3;
-//      }
-//    }
-    //Serial.println(motors.alignRatio);
   }
 }
 /*
@@ -374,6 +359,29 @@ void returnHome(int direction, int steps) {
   go(RIGHT, 180 - (direction * 45), false);
 }
 
+void pickUp(){
+
+  for (servoPosition = 0; servoPosition <= 123; servoPosition += 1) { // goes from 0 degrees to 180 degrees
+    // in steps of 1 degree
+    myservo.write(servoPosition);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+  delay(500);
+  for (servoPosition = 80; servoPosition >= 0; servoPosition -= 1) { // goes from 180 degrees to 0 degrees
+    myservo.write(servoPosition);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+  delay(500);
+}
+
+void drop(){
+ for (servoPosition = 50; servoPosition >= 0; servoPosition -= 1) { // goes from 180 degrees to 0 degrees
+    myservo.write(servoPosition);              // tell servo to go to position in variable 'servoPosition'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
+  
+}
+
 void getCoin(){
     //Write code that will use line sensors to detect coin
     //Use buffer to avoid errors
@@ -385,7 +393,9 @@ void goTo(int direction, int steps) {
   go(RIGHT, direction * 45, false);
   delay(500);
   go(FRONT, steps, true);
-  delay(500);
+  delay(250);
+  pickUp();
+  delay(250);
   returnHome(direction, steps);
   Color colors[6] = {RED, GREEN, SKYBLUE, BLUE, RED, PURPLE};
   p = p+1;
@@ -396,7 +406,9 @@ void goToRed(){
   go(RIGHT, 3 * 45, false);
   delay(500);
   go(FRONT, 52, true);
-  delay(500);
+  delay(250);
+  drop();
+  delay(250);
   returnHome(3, 52);
 }
 
@@ -404,7 +416,9 @@ void goToGreen(){
   go(RIGHT, 2 * 45, false);
   delay(500);
   go(FRONT, 41, true);
-  delay(500);
+  delay(250);
+  drop();
+  delay(250);
   returnHome(2, 41);
 }
 
@@ -412,7 +426,9 @@ void goToBlue(){
   go(RIGHT, 1 * 45, false);
   delay(500);
   go(FRONT, 52, true);
-  delay(500);
+  delay(250);
+  drop();
+  delay(250);
   returnHome(1, 52);
 }
 
@@ -420,7 +436,9 @@ void goToYellow(){
   go(RIGHT, 7 * 45, false);
   delay(500);
   go(FRONT, 52, true);
-  delay(500);
+  delay(250);
+  drop();
+  delay(250);
   returnHome(7, 52);
 }
 
@@ -428,7 +446,9 @@ void goToPurple(){
   go(RIGHT, 6 * 45, false);
   delay(500);
   go(FRONT, 41, true); 
-  delay(500);
+  delay(250);
+  drop();
+  delay(250);
   returnHome(6, 41);
 }
 
@@ -436,7 +456,9 @@ void goToSkyBlue(){
   go(RIGHT, 5 * 45, false);
   delay(500);
   go(FRONT, 52, true);   
-  delay(500);
+  delay(250);
+  drop();
+  delay(250);
   returnHome(5, 52);
 }
 
@@ -470,16 +492,16 @@ void beginCourse() {
 
 void setup() {
   Serial.begin(9600);
-  int i =0;
-  for (i =0 ; i < 8; i++){
-  Serial.println(qtrrc.calibratedMinimumOn[i]);
+
+  //Calibrate line sensor
+//put code here
+
   
-  qtrrc.calibratedMinimumOn[i] = 272;
-  qtrrc.calibratedMaximumOn[i] = 2500;
   
-  }
   initialize();
   beginCourse();
+
+  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
   //go(FRONT, 2000, true);
 }
 // loops seems to break with ISR,
