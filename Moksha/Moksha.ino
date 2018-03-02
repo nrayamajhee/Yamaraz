@@ -36,7 +36,7 @@
 #define NUM_SENSORS   8
 #define TIMEOUT       2500
 #define EMITTER_PIN   2
-#define IR_THRESHHOLD 700
+#define IR_THRESHHOLD 70
 /*
  * Direction types
  * ---------------
@@ -106,9 +106,11 @@ struct Motors {
   volatile float alignRatio;
 };
 Motors motors = {
-  false, 0 , 0,
+  false, 
+  0, 
+  0,
   600,  // to mils delay
-  2000, // from mils delay
+  1000, // from mils delay
   0,
   1     // turn ratio
 };
@@ -162,12 +164,14 @@ ISR(TIMER3_COMPA_vect) {
   if (motors.running) {
     // this will change the speeds of both wheels because we
     // mutate the global volatile variable motors.speed
+    
     if (motors.steps <= (int)(0.2 * motors.totalSteps) && (motors.speed > motors.maxSpeed)) {
       motors.speed -= ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
 
     } else if (motors.steps >= (int)(0.8 * motors.totalSteps) && (motors.speed < motors.minSpeed)) {
       motors.speed += ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
     }
+//    
     // Toggle the left motors
     // and change duration for them
     setTimers(LEFT, motors.speed);
@@ -193,12 +197,12 @@ ISR(TIMER4_COMPA_vect) {
     PORTL ^= 0x50;
     setTimers(RIGHT, motors.alignRatio * motors.speed);
     if(debug.steps) {
-//      Serial.print(" | ");
-//      Serial.print(motors.totalSteps);
-//      Serial.print(" # ");
-//      Serial.print(motors.steps);
-//      Serial.print(" : ");
-//      Serial.println(motors.speed);
+      Serial.print(" | ");
+      Serial.print(motors.totalSteps);
+      Serial.print(" # ");
+      Serial.print(motors.steps);
+      Serial.print(" : ");
+      Serial.println(motors.speed);
     }
   }
 }
@@ -212,13 +216,12 @@ void IR_filter() {
   }
   if(debug.ir){
     for (unsigned char i = 0; i < NUM_SENSORS; i++) {
-      //Uncomment this
-//      Serial.print(ir.filteredValues[i]);
-//      Serial.print('\t');
+      Serial.print(ir.filteredValues[i]);
+      Serial.print('\t');
     }
   }
-  //Serial.println();
-  delay(250);
+  Serial.println();
+//  delay(250);
 }
 /*
  * Sets the direction PINS form PORTL
@@ -252,7 +255,6 @@ void setDirection(Direction dir) {
 void go(Direction dir, int amount, bool correct){
   setDirection(dir);
   if (dir == FRONT || dir == BACK){
-    Serial.println("Reached go");
     //motors.totalSteps = amount; // linear calibration
     motors.totalSteps = amount * 216; // linear calibration
   } else if(dir == SLEFT || dir == SRIGHT){
@@ -278,8 +280,31 @@ void go(Direction dir, int amount, bool correct){
   while(motors.running == true) {
     IR_filter();
     if(correct) {
-      int left = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
-      int right = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
+      float avg = 4.5;
+      float sum = ir.filteredValues[0] + 2*ir.filteredValues[1] + 3*ir.filteredValues[2] + 4*ir.filteredValues[3]+5*ir.filteredValues[4] + 6*ir.filteredValues[5] + 7*ir.filteredValues[6] + 8*ir.filteredValues[7];
+
+      float onCount = 0;
+      
+      for(int i = 0; i < 8; i++){
+        if(ir.filteredValues[i] == 1){
+          onCount++;
+        }
+      }
+
+      if(onCount == 0){
+        onCount = 4.5;
+      }
+
+      float newAverage = sum / onCount;
+
+      if(onCount > 2){
+        newAverage = 4.5;
+      }
+      motors.alignRatio = 1 + ( newAverage - 4.5) * .08;        //1 is calibrated value
+      Serial.println(motors.alignRatio);
+    }
+//      int left = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
+//      int right = ir.filteredValues[0] + ir.filteredValues[1] + ir.filteredValues[2] + ir.filteredValues[3];
 //      Serial.println(left);
 //      Serial.println(right);
 //      if(ir.filteredValues[3] || ir.filteredValues[4]){
@@ -297,7 +322,7 @@ void go(Direction dir, int amount, bool correct){
 //      } else if (ir.filteredValues[6] || ir.filteredValues[7]) {
 //        motors.alignRatio = 1.3;
 //      }
-    }
+//    }
     //Serial.println(motors.alignRatio);
   }
 }
@@ -357,7 +382,6 @@ void getCoin(){
 }
  
 void goTo(int direction, int steps) {
-  Serial.println("Reached goTo");
   go(RIGHT, direction * 45, false);
   delay(500);
   go(FRONT, steps, true);
@@ -366,14 +390,12 @@ void goTo(int direction, int steps) {
   Color colors[6] = {RED, GREEN, SKYBLUE, BLUE, RED, PURPLE};
   p = p+1;
   coinColor = colors[p];
-  Serial.print("CoinColor: ");
-  Serial.println(coinColor);
 }
 
 void goToRed(){
   go(RIGHT, 3 * 45, false);
   delay(500);
-  go(FRONT, 52, false);
+  go(FRONT, 52, true);
   delay(500);
   returnHome(3, 52);
 }
@@ -381,7 +403,7 @@ void goToRed(){
 void goToGreen(){
   go(RIGHT, 2 * 45, false);
   delay(500);
-  go(FRONT, 41, false);
+  go(FRONT, 41, true);
   delay(500);
   returnHome(2, 41);
 }
@@ -389,7 +411,7 @@ void goToGreen(){
 void goToBlue(){
   go(RIGHT, 1 * 45, false);
   delay(500);
-  go(FRONT, 52, false);
+  go(FRONT, 52, true);
   delay(500);
   returnHome(1, 52);
 }
@@ -397,7 +419,7 @@ void goToBlue(){
 void goToYellow(){
   go(RIGHT, 7 * 45, false);
   delay(500);
-  go(FRONT, 52, false);
+  go(FRONT, 52, true);
   delay(500);
   returnHome(7, 52);
 }
@@ -405,7 +427,7 @@ void goToYellow(){
 void goToPurple(){
   go(RIGHT, 6 * 45, false);
   delay(500);
-  go(FRONT, 41, false); 
+  go(FRONT, 41, true); 
   delay(500);
   returnHome(6, 41);
 }
@@ -413,7 +435,7 @@ void goToPurple(){
 void goToSkyBlue(){
   go(RIGHT, 5 * 45, false);
   delay(500);
-  go(FRONT, 52, false);   
+  go(FRONT, 52, true);   
   delay(500);
   returnHome(5, 52);
 }
@@ -435,24 +457,31 @@ void robotAutonimiouso(){
 }
 
 void beginCourse() {
-  go(FRONT, 43.5, false);
-  for(int i = 1; i <=8; i++){
-    Serial.println("Reached for loop");
-    Serial.print("i: ");
-    Serial.println(i);
-    if((i!=4)&&(i!=8)){
-      goTo(i, 11.7);
-      delay(500);
-      robotAutonimiouso();
-    }
-  }
+  go(FRONT, 96, true);
+//  delay(500);
+//  for(int i = 1; i <=8; i++){
+//    if((i!=4)&&(i!=8)){
+//      goTo(i, 11.7);
+//      delay(500);
+//      robotAutonimiouso();
+//    }
+//  }
 }
 
 void setup() {
+  Serial.begin(9600);
+  int i =0;
+  for (i =0 ; i < 8; i++){
+  Serial.println(qtrrc.calibratedMinimumOn[i]);
+  
+  qtrrc.calibratedMinimumOn[i] = 272;
+  qtrrc.calibratedMaximumOn[i] = 2500;
+  
+  }
   initialize();
   beginCourse();
   //go(FRONT, 2000, true);
 }
-// loops seems to break with IRS,
+// loops seems to break with ISR,
 // might behave in undefined ways
 void loop() {}
