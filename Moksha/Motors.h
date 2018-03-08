@@ -1,3 +1,9 @@
+/*
+ * Direction types
+ * ---------------
+ * left and right are rotation
+ * sleft and sright are strafing
+ */
 enum Direction {
   FRONT,
   BACK,
@@ -9,7 +15,6 @@ enum Direction {
   DOWN,
   ALL
 };
-
 /*
 * Debug flags
 */
@@ -63,10 +68,6 @@ void setDirection(Direction dir) {
   }
 }
 /*
- * ======================================
- * All low level functionality goes below
- */
-/*
  * Interrupt Service Routines
  */
 void initTimers() {
@@ -96,7 +97,6 @@ void initTimers() {
 //  TIMSK5 |= (1 << OCIE5A);
   interrupts();
 }
-
 /*
  * This one modifies OCR?A which controls the interrupt duration
  * 
@@ -111,7 +111,6 @@ void setTimers(Direction dir, int msDelay) {
     OCR4A  = 8 * msDelay;
   }
 }
-
 /*
  * ISR for timer 3 LEFT MOTORS
  * responsible for accleration and step counting
@@ -143,7 +142,6 @@ ISR(TIMER3_COMPA_vect) {
     }
   }
 }
-
 /*
  * ISR for timer 4 RIGHT MOTORS
  * responsible for serial printing info
