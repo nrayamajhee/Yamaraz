@@ -33,11 +33,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <QTRSensors.h>
-#include <Servo.h>
 #define NUM_SENSORS   8
 #define TIMEOUT       2500
 #define EMITTER_PIN   2
-#define IR_THRESHHOLD 70
+#define IR_THRESHHOLD 700
 /*
  * Direction types
  * ---------------
@@ -51,6 +50,8 @@ enum Direction {
   LEFT,
   SLEFT,
   SRIGHT,
+  UP,
+  DOWN,
   ALL
 };
 enum Compass {
@@ -77,19 +78,24 @@ enum Color {
 QTRSensorsRC qtrrc((unsigned char[]) {22, 23, 24, 25, 26, 27, 28, 29},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN);
 
-Servo myservo;  // create servo object to control a servo
+struct Servo {
+  volatile bool state;
+  volatile int count;
+  volatile int maxCount;
+};
 
-int servoPosition = 0;    // variable to store the servo position
-  
+Servo servo = { false, 0, 0};
+
  /*
   * Debug flags
   */
 struct Debug {
   bool steps;
   bool ir;
+  bool servo;
   bool motion;
 };
-Debug debug   = {0, 1, 0};
+Debug debug   = {0, 1, 0, 0};
 /*
  * The IR structure provides RAW sensor values and values filtered as ON or OFF
  */
@@ -145,6 +151,13 @@ void initTimers() {
   TCCR4B |= (1 << WGM42);
   TCCR4B |= (1 << CS40);
   TIMSK4 |= (1 << OCIE4A);
+  // Timer 5
+//  TCCR5A = 0;
+//  TCCR5B = 0;
+//  TCNT5  = 0;
+//  TCCR5B |= (1 << WGM52);
+//  TCCR5B |= (1 << CS50);
+//  TIMSK5 |= (1 << OCIE5A);
   interrupts();
 }
 /*
@@ -212,6 +225,25 @@ ISR(TIMER4_COMPA_vect) {
     }
   }
 }
+
+void runServo(Direction dir) {
+  int speed, steps;
+  if (dir == UP) {
+    speed = 300;
+    steps = 2000;
+  } else if (dir == DOWN) {
+    speed = 2500;
+    steps = 200;
+  }
+  int cnt = 0;
+  while (cnt < steps){
+    digitalWrite(10, HIGH);
+    delayMicroseconds(speed);
+    digitalWrite(10, LOW);  
+    delayMicroseconds(speed);
+    cnt++;
+  }
+}
 /*
  * Read and filter out sensor values
  */
@@ -255,7 +287,7 @@ void setDirection(Direction dir) {
  * 
  * the amount will be in inches for
  * front, back, sleft and sright,
- * and degrees for
+ * and degrees fori
  * left and right
  */
 void go(Direction dir, int amount, bool correct){
@@ -315,14 +347,12 @@ void go(Direction dir, int amount, bool correct){
  * Initialize ports, and timers
  */
 void initialize() {
-  // set port L to output
-  DDRL = 0xFF;
-  // delay for the IR sensors
-  delay(500);
+  DDRL = 0xFF;          // set port L to output
+  pinMode(10, OUTPUT);  // servo output
+  delay(500);           // delay for the IR sensors
   Serial.begin(9600);
   delay(1500);
-  // start the timers
-  initTimers();
+  initTimers();         // start the timers
   setTimers(ALL, motors.minSpeed);
 }
 /*
@@ -359,29 +389,6 @@ void returnHome(int direction, int steps) {
   go(RIGHT, 180 - (direction * 45), false);
 }
 
-void pickUp(){
-
-  for (servoPosition = 0; servoPosition <= 123; servoPosition += 1) { // goes from 0 degrees to 180 degrees
-    // in steps of 1 degree
-    myservo.write(servoPosition);              // tell servo to go to position in variable 'pos'
-    delay(15);                       // waits 15ms for the servo to reach the position
-  }
-  delay(500);
-  for (servoPosition = 80; servoPosition >= 0; servoPosition -= 1) { // goes from 180 degrees to 0 degrees
-    myservo.write(servoPosition);              // tell servo to go to position in variable 'pos'
-    delay(15);                       // waits 15ms for the servo to reach the position
-  }
-  delay(500);
-}
-
-void drop(){
- for (servoPosition = 50; servoPosition >= 0; servoPosition -= 1) { // goes from 180 degrees to 0 degrees
-    myservo.write(servoPosition);              // tell servo to go to position in variable 'servoPosition'
-    delay(15);                       // waits 15ms for the servo to reach the position
-  }
-  
-}
-
 void getCoin(){
     //Write code that will use line sensors to detect coin
     //Use buffer to avoid errors
@@ -394,7 +401,7 @@ void goTo(int direction, int steps) {
   delay(500);
   go(FRONT, steps, true);
   delay(250);
-  pickUp();
+  //pickUp();
   delay(250);
   returnHome(direction, steps);
   Color colors[6] = {RED, GREEN, SKYBLUE, BLUE, RED, PURPLE};
@@ -407,7 +414,7 @@ void goToRed(){
   delay(500);
   go(FRONT, 52, true);
   delay(250);
-  drop();
+  //drop();
   delay(250);
   returnHome(3, 52);
 }
@@ -417,7 +424,7 @@ void goToGreen(){
   delay(500);
   go(FRONT, 41, true);
   delay(250);
-  drop();
+  //drop();
   delay(250);
   returnHome(2, 41);
 }
@@ -427,7 +434,7 @@ void goToBlue(){
   delay(500);
   go(FRONT, 52, true);
   delay(250);
-  drop();
+  //drop();
   delay(250);
   returnHome(1, 52);
 }
@@ -437,7 +444,7 @@ void goToYellow(){
   delay(500);
   go(FRONT, 52, true);
   delay(250);
-  drop();
+  //drop();
   delay(250);
   returnHome(7, 52);
 }
@@ -447,7 +454,7 @@ void goToPurple(){
   delay(500);
   go(FRONT, 41, true); 
   delay(250);
-  drop();
+  //drop();
   delay(250);
   returnHome(6, 41);
 }
@@ -457,7 +464,7 @@ void goToSkyBlue(){
   delay(500);
   go(FRONT, 52, true);   
   delay(250);
-  drop();
+  //drop();
   delay(250);
   returnHome(5, 52);
 }
@@ -479,7 +486,7 @@ void robotAutonimiouso(){
 }
 
 void beginCourse() {
-  go(FRONT, 96, true);
+  go(FRONT, 60, true);
 //  delay(500);
 //  for(int i = 1; i <=8; i++){
 //    if((i!=4)&&(i!=8)){
@@ -492,18 +499,13 @@ void beginCourse() {
 
 void setup() {
   Serial.begin(9600);
-
-  //Calibrate line sensor
-//put code here
-
-  
-  
   initialize();
   beginCourse();
-
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
-  //go(FRONT, 2000, true);
 }
-// loops seems to break with ISR,
-// might behave in undefined ways
-void loop() {}
+
+void loop() {
+//  runServo(UP);
+//  delay(500);
+//  runServo(DOWN);
+//  delay(500);
+}
