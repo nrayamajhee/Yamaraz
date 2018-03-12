@@ -3,7 +3,7 @@
  * our algorith to run the course will be using
  * these features
  */
-#include "Motion.h"
+#include "Motors.h"
 #include "IR.h"
 #include "Servo.h"
 enum Compass {
@@ -26,6 +26,7 @@ enum Compass {
  * left and right
  */
 void go(Direction dir, int amount, bool correct){
+  Serial.println(correct);
   setDirection(dir);
   if (dir == FRONT || dir == BACK){
     //motors.totalSteps = amount; // linear calibration
@@ -50,36 +51,23 @@ void go(Direction dir, int amount, bool correct){
   motors.speed = motors.minSpeed;
   motors.running = true;
 
+  int spokes = 0;
+
   while(motors.running == true) {
-    IR_filter();
     if(correct) {
-      float avg = 4.5;
-      float sum = ir.filteredValues[0] + 2*ir.filteredValues[1] + 3*ir.filteredValues[2] + 4*ir.filteredValues[3]+5*ir.filteredValues[4] + 6*ir.filteredValues[5] + 7*ir.filteredValues[6] + 8*ir.filteredValues[7];
-
-      float onCount = 0;
-      
-      for(int i = 0; i < 8; i++){
-        if(ir.filteredValues[i] == 1){
-          onCount++;
-        }
+      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
+      if(detect_spoke()){
+        spokes++;
       }
-
-      if(onCount == 0){
-        onCount = 4.5;
+      if(spokes > 2) {
+        motors.running = false;
+        return;
       }
-
-      float newAverage = sum / onCount;
-
-      if(onCount > 2){
-        newAverage = 4.5;
-      }
-      motors.alignRatio = 1 + (newAverage - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
-      //Serial.println(motors.alignRatio);
-    }
+     }
   }
 }
 
-void returnHome(int direction, int steps) {
+void returnHome(int direction, int amount) {
   Serial.println("Reached returnHome");
   go(RIGHT, 180, false);  //Turn around
   delay(500);
@@ -91,13 +79,15 @@ void returnHome(int direction, int steps) {
 void goTo(int direction, int steps) {
   go(RIGHT, direction * 45, false);
   delay(500);
-  go(FRONT, steps, true);
+  go(FRONT, 5, false);
+  delay(500);
+  go(FRONT, 48, true);
   delay(250);
-  //pickUp();
-  delay(250);
-  returnHome(direction, steps);
-  //Color colors[6] = {RED, GREEN, SKYBLUE, BLUE, RED, PURPLE};
-  //p = p+1;
-  //coinColor = colors[p];
+  
+//  go(FRONT, steps, true);
+//  delay(250);
+//  //pickUp();
+//  delay(250);
+  returnHome(direction, 48);
 }
 
