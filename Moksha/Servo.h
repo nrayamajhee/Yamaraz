@@ -19,7 +19,7 @@ void runServo(Direction dir) {
   while (cnt < steps){
     digitalWrite(10, HIGH);
     delayMicroseconds(speed);
-    digitalWrite(10, LOW);  
+    digitalWrite(10, LOW);
     delayMicroseconds(speed);
     cnt++;
   }
