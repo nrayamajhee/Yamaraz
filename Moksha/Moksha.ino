@@ -62,6 +62,7 @@ void beginCourse() {
     if(i!=4){
       goTo(i, 48);
       delay(500);
+      break;
     }
   }
 }
@@ -94,9 +95,10 @@ void runPeriphery() {
 void setup() {
   Serial.begin(9600);
   initialize();
-  beginCourse();
+  //beginCourse();
 //  fixRobotLine();
 }
 
 void loop() {
+  pickUp();
 }

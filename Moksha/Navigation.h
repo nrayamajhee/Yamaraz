@@ -48,18 +48,24 @@ void go(Direction dir, float amount, bool correct, bool constantSpeed) {
   }
 
   // set slow speed and start the motors
-  motors.speed = motors.minSpeed;
   if(constantSpeed) {
     motors.speed = 5000;
     motors.accelerate = false;
+  } else {
+    motors.speed = motors.minSpeed;
+    motors.accelerate = true;
   }
   motors.running = true;
-
-  int spokes = 0;
 
   while(motors.running == true) {
 
     if(correct) {
+      
+    int spokes = 0;
+    if(detect_spoke()) {
+      motors.running = false;
+      spokes++;
+    }
       motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
       //Serial.println(motors.alignRatio);
     }
@@ -69,16 +75,12 @@ void go(Direction dir, float amount, bool correct, bool constantSpeed) {
 void fixRobotLine(){
   delay(250);
   float average = calculate_average();
-  Serial.print("Average: ");
-  Serial.println(average);
   if(average > 4.5){
-    Serial.println(">0");
     while(average > 4.5){
       go(SRIGHT, 0.1, false, true);
       average = calculate_average();
     }
   }else if(average < 4.5){
-    Serial.println("<0");
     while(average < 4.5){
       go(SLEFT, 0.1, false, true);
       average = calculate_average();
@@ -89,18 +91,21 @@ void fixRobotLine(){
 void returnHome(int direction, int steps) {
   go(RIGHT, 180, false, false);  //Turn around
   delay(500);
-  go(FRONT, steps, false, false);
+//  fixRobotLine();
+  go(FRONT, 15, false, false);
   delay(500);
-  go(RIGHT, 180 - (direction * 45), false, false);
+  go(LEFT, 180 - (direction * 45), false, false);
 }
 
 void goTo(int direction, int steps) {
   go(RIGHT, direction * 45, false, false);
   delay(500);
-  go(FRONT, 5, false, false);
+  go(FRONT, 10, false, false);
+  fixRobotLine();
   delay(500);
-  go(FRONT, 48, true, false);
+  go(FRONT, 20, true, false);
   delay(250);
+  pickUp();
 
 //  go(FRONT, steps, true);
 //  delay(250);
