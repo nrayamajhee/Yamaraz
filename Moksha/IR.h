@@ -33,3 +33,30 @@ void IR_filter() {
   Serial.println();
 //  delay(250);
 }
+
+float IR_Average(){
+  IR_filter();
+  float avg = 4.5;
+  float sum = ir.filteredValues[0] + 2*ir.filteredValues[1] + 3*ir.filteredValues[2] + 4*ir.filteredValues[3]+5*ir.filteredValues[4] + 6*ir.filteredValues[5] + 7*ir.filteredValues[6] + 8*ir.filteredValues[7];
+  
+        float onCount = 0;
+        
+        for(int i = 0; i < 8; i++){
+          if(ir.filteredValues[i] == 1){
+            onCount++;
+          }
+        }
+  
+        if(onCount == 0){
+          onCount = 4.5;
+        }
+  
+        float newAverage = sum / onCount;
+  
+        if(onCount > 2){
+          newAverage = 4.5;
+        }
+
+        return newAverage;
+}
+

@@ -3,7 +3,7 @@
  * our algorith to run the course will be using
  * these features
  */
-#include "Motion.h"
+#include "Motors.h"
 #include "IR.h"
 #include "Servo.h"
 enum Compass {
@@ -16,6 +16,7 @@ enum Compass {
   WEST,   // purple
   NWEST   // skyblue
 };
+
 /*
  * Turns the IRS flags on and sets the
  * number of steps to run
@@ -25,7 +26,7 @@ enum Compass {
  * and degrees fori
  * left and right
  */
-void go(Direction dir, int amount, bool correct){
+void go(Direction dir, float amount, bool correct, bool constantSpeed){
   setDirection(dir);
   if (dir == FRONT || dir == BACK){
     //motors.totalSteps = amount; // linear calibration
@@ -48,56 +49,58 @@ void go(Direction dir, int amount, bool correct){
 
   // set slow speed and start the motors
   motors.speed = motors.minSpeed;
+  if(constantSpeed) {
+    motors.speed = 5000;
+    motors.accelerate = false;
+  }
   motors.running = true;
 
   while(motors.running == true) {
-    IR_filter();
+    
     if(correct) {
-      float avg = 4.5;
-      float sum = ir.filteredValues[0] + 2*ir.filteredValues[1] + 3*ir.filteredValues[2] + 4*ir.filteredValues[3]+5*ir.filteredValues[4] + 6*ir.filteredValues[5] + 7*ir.filteredValues[6] + 8*ir.filteredValues[7];
-
-      float onCount = 0;
-      
-      for(int i = 0; i < 8; i++){
-        if(ir.filteredValues[i] == 1){
-          onCount++;
-        }
-      }
-
-      if(onCount == 0){
-        onCount = 4.5;
-      }
-
-      float newAverage = sum / onCount;
-
-      if(onCount > 2){
-        newAverage = 4.5;
-      }
-      motors.alignRatio = 1 + (newAverage - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
+      motors.alignRatio = 1 + (IR_Average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
       //Serial.println(motors.alignRatio);
     }
   }
 }
 
+void fixRobotLine(){
+  delay(250);
+  float average = IR_Average();
+  Serial.print("Average: ");
+  Serial.println(average);
+  if(average > 4.5){
+    Serial.println(">0");
+    while(average > 4.5){
+      go(SRIGHT, 0.1, false, true);
+      average = IR_Average();
+    }
+  }else if(average < 4.5){
+    Serial.println("<0");
+    while(average < 4.5){
+      go(SLEFT, 0.1, false, true);
+      average = IR_Average();
+    }
+  }
+}
+
 void returnHome(int direction, int steps) {
-  Serial.println("Reached returnHome");
-  go(RIGHT, 180, false);  //Turn around
+  go(RIGHT, 180, false, false);  //Turn around
   delay(500);
-  go(FRONT, steps, false);
+  go(FRONT, steps, false, false);
   delay(500);
-  go(RIGHT, 180 - (direction * 45), false);
+  go(RIGHT, 180 - (direction * 45), false, false);
 }
 
 void goTo(int direction, int steps) {
-  go(RIGHT, direction * 45, false);
+  go(RIGHT, direction * 45, false, false);
   delay(500);
-  go(FRONT, steps, true);
+  go(FRONT, steps, true, false);
   delay(250);
   //pickUp();
   delay(250);
   returnHome(direction, steps);
-  //Color colors[6] = {RED, GREEN, SKYBLUE, BLUE, RED, PURPLE};
-  //p = p+1;
-  //coinColor = colors[p];
 }
+
+
 

@@ -37,6 +37,7 @@ struct Motors {
   int minSpeed;
   volatile int speed;
   volatile float alignRatio;
+  volatile bool accelerate;
 };
 Motors motors = {
   false, 
@@ -45,7 +46,8 @@ Motors motors = {
   600,  // to mils delay
   1000, // from mils delay
   0,
-  1     // turn ratio
+  1,     // turn ratio
+  1    // accelerate
 };
 /*
  * Sets the direction PINS form PORTL
@@ -120,12 +122,14 @@ ISR(TIMER3_COMPA_vect) {
   if (motors.running) {
     // this will change the speeds of both wheels because we
     // mutate the global volatile variable motors.speed
-    
-    if (motors.steps <= (int)(0.2 * motors.totalSteps) && (motors.speed > motors.maxSpeed)) {
-      motors.speed -= ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
 
-    } else if (motors.steps >= (int)(0.8 * motors.totalSteps) && (motors.speed < motors.minSpeed)) {
-      motors.speed += ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
+    if(motors.accelerate) {
+      if (motors.steps <= (int)(0.2 * motors.totalSteps) && (motors.speed > motors.maxSpeed)) {
+        motors.speed -= ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
+  
+      } else if (motors.steps >= (int)(0.8 * motors.totalSteps) && (motors.speed < motors.minSpeed)) {
+        motors.speed += ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
+      }
     }
 //    
     // Toggle the left motors

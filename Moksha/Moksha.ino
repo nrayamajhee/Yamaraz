@@ -56,15 +56,7 @@ void initialize() {
 
 
 void beginCourse() {
-  go(FRONT, 60, true);
-//  delay(500);
-//  for(int i = 1; i <=8; i++){
-//    if((i!=4)&&(i!=8)){
-//      goTo(i, 11.7);
-//      delay(500);
-//      robotAutonimiouso();
-//    }
-//  }
+  go(FRONT, 60, true, false);
 }
 
 /*
@@ -88,103 +80,10 @@ void setup() {
   Serial.begin(9600);
   initialize();
   beginCourse();
+//  fixRobotLine();
 }
 
 void loop() {
-//  runServo(UP);
-//  delay(500);
-//  runServo(DOWN);
-//  delay(500);
 }
 
-//Color coinColor;
-//
-////for demo
-//int p = -1;
- 
 
-
-//void getCoin(){
-//    //Write code that will use line sensors to detect coin
-//    //Use buffer to avoid errors
-//    //picUpCoin();
-//    //returnHome should be here
-//}
-// 
-//
-//
-//void goToRed(){
-//  go(RIGHT, 3 * 45, false);
-//  delay(500);
-//  go(FRONT, 52, true);
-//  delay(250);
-//  //drop();
-//  delay(250);
-//  returnHome(3, 52);
-//}
-//
-//void goToGreen(){
-//  go(RIGHT, 2 * 45, false);
-//  delay(500);
-//  go(FRONT, 41, true);
-//  delay(250);
-//  //drop();
-//  delay(250);
-//  returnHome(2, 41);
-//}
-//
-//void goToBlue(){
-//  go(RIGHT, 1 * 45, false);
-//  delay(500);
-//  go(FRONT, 52, true);
-//  delay(250);
-//  //drop();
-//  delay(250);
-//  returnHome(1, 52);
-//}
-//
-//void goToYellow(){
-//  go(RIGHT, 7 * 45, false);
-//  delay(500);
-//  go(FRONT, 52, true);
-//  delay(250);
-//  //drop();
-//  delay(250);
-//  returnHome(7, 52);
-//}
-//
-//void goToPurple(){
-//  go(RIGHT, 6 * 45, false);
-//  delay(500);
-//  go(FRONT, 41, true); 
-//  delay(250);
-//  //drop();
-//  delay(250);
-//  returnHome(6, 41);
-//}
-//
-//void goToSkyBlue(){
-//  go(RIGHT, 5 * 45, false);
-//  delay(500);
-//  go(FRONT, 52, true);   
-//  delay(250);
-//  //drop();
-//  delay(250);
-//  returnHome(5, 52);
-//}
-//
-//void robotAutonimiouso(){
-//  if(coinColor == RED){
-//    goToRed();  
-//  }else if(coinColor == GREEN){
-//    goToGreen();
-//  }else if(coinColor == BLUE){
-//    goToBlue();
-//  }else if(coinColor == YELLOW){
-//    goToYellow();
-//  }else if(coinColor == PURPLE){
-//    goToPurple();
-//  }else if(coinColor == SKYBLUE){
-//    goToSkyBlue();
-//  }
-//}
