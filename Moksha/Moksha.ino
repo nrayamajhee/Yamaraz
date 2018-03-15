@@ -47,6 +47,7 @@ enum Color {
 void initialize() {
   DDRL = 0xFF;          // set port L to output
   pinMode(10, OUTPUT);  // servo output
+  pinMode(11, OUTPUT);  // magenet output
   delay(500);           // delay for the IR sensors
   Serial.begin(9600);
   delay(1500);
@@ -58,7 +59,7 @@ void initialize() {
 void beginCourse() {
   go(FRONT, 43.5, false, false);
   delay(500);
-  for(int i = 1; i <8; i++){
+  for(int i = 1; i <2; i++){
     if(i!=4){
       goTo(i, 48);
       delay(500);
@@ -95,10 +96,11 @@ void runPeriphery() {
 void setup() {
   Serial.begin(9600);
   initialize();
-  //beginCourse();
+  beginCourse();
 //  fixRobotLine();
 }
 
 void loop() {
-  pickUp();
+//  pickUp();
+//Serial.println(calculate_average());
 }

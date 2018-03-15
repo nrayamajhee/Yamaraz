@@ -9,9 +9,9 @@ Servo servo = { false, 0, 0};
 void runServo(Direction dir) {
   int speed, steps;
   if (dir == UP) {
-    speed = 1000;
+    speed = 500;
   } else if (dir == DOWN) {
-    speed = 2000;
+    speed = 2500;
   }
   int cnt = 0;
   int highDelay = speed;
@@ -28,6 +28,11 @@ void runServo(Direction dir) {
 
 void pickUp() {
   runServo(DOWN);
+  digitalWrite(11, LOW);
+  delay(500);
   runServo(UP);
+  delay(500);
+  digitalWrite(11, HIGH);
+  delay(500);
 }
 

@@ -24,7 +24,7 @@ struct Debug {
   bool servo;
   bool motion;
 };
-Debug debug   = {0, 0, 0, 0};
+Debug debug   = {0, 1 , 0, 0};
 /*
  * The Motors have many states. All of these are mutable and are
  * updated by the interrupt service routines ISR on TIMER 3 and 4
@@ -44,7 +44,7 @@ Motors motors = {
   0, 
   0,
   600,  // to mils delay
-  1000, // from mils delay
+  2000, // from mils delay
   0,
   1,     // turn ratio
   1    // accelerate
@@ -153,7 +153,7 @@ ISR(TIMER3_COMPA_vect) {
 ISR(TIMER4_COMPA_vect) {
   if (motors.running) {
     // Toggle the left motors
-    // and change duration for them with the given ratio
+    // and change duration  for them with the given ratio
     PORTL ^= 0x50;
     setTimers(RIGHT, motors.alignRatio * motors.speed);
     if(debug.steps) {

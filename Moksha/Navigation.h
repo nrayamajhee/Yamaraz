@@ -15,7 +15,7 @@ enum Compass {
   SWEST,  // yellow
   WEST,   // purple
   NWEST   // skyblue
-};
+}; 
 
 /*
  * Turns the IRS flags on and sets the
@@ -60,6 +60,36 @@ void go(Direction dir, float amount, bool correct, bool constantSpeed) {
   while(motors.running == true) {
 
     if(correct) {
+      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
+      //Serial.println(motors.alignRatio);
+    }
+  }
+}
+
+void goUntilSpokes(Direction dir, float amount, bool correct, bool constantSpeed) {
+  setDirection(dir);
+  if (dir == FRONT || dir == BACK){
+    //motors.totalSteps = amount; // linear calibration
+    motors.totalSteps = amount * 216; // linear calibration
+  } else if(dir == SLEFT || dir == SRIGHT){
+    motors.totalSteps = amount * 800; // strafing calibration
+  } else {
+    motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
+  }
+
+  // set slow speed and start the motors
+  if(constantSpeed) {
+    motors.speed = 5000;
+    motors.accelerate = false;
+  } else {
+    motors.speed = motors.minSpeed;
+    motors.accelerate = true;
+  }
+  motors.running = true;
+
+  while(motors.running == true) {
+
+    if(correct) {
       
     int spokes = 0;
     if(detect_spoke()) {
@@ -75,41 +105,32 @@ void go(Direction dir, float amount, bool correct, bool constantSpeed) {
 void fixRobotLine(){
   delay(250);
   float average = calculate_average();
+  Serial.println(average);
   if(average > 4.5){
     while(average > 4.5){
       go(SRIGHT, 0.1, false, true);
       average = calculate_average();
     }
-  }else if(average < 4.5){
-    while(average < 4.5){
+  }else if(average <= 4.5){
+    while(average <= 4.5){
       go(SLEFT, 0.1, false, true);
       average = calculate_average();
     }
   }
 }
 
-void returnHome(int direction, int steps) {
-  go(RIGHT, 180, false, false);  //Turn around
-  delay(500);
-//  fixRobotLine();
-  go(FRONT, 15, false, false);
-  delay(500);
-  go(LEFT, 180 - (direction * 45), false, false);
-}
-
 void goTo(int direction, int steps) {
   go(RIGHT, direction * 45, false, false);
   delay(500);
-  go(FRONT, 10, false, false);
+  go(FRONT, 24, true, true);
+  go(FRONT, 180, false, false);
   fixRobotLine();
+  goUntilSpokes(FRONT, 24, true, true);
   delay(500);
-  go(FRONT, 20, true, false);
-  delay(250);
   pickUp();
-
-//  go(FRONT, steps, true);
-//  delay(250);
-//  //pickUp();
-//  delay(250);
-  returnHome(direction, 48);
+  goUntilSpokes(FRONT, 24, true, true);
+  delay(250);
+  go(FRONT, 15, false, false);
+  delay(500);
+  go(LEFT, 180 - (direction * 45), false, false);
 }
