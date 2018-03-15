@@ -96,7 +96,8 @@ void runPeriphery() {
 void setup() {
   Serial.begin(9600);
   initialize();
-  beginCourse();
+  goUntilSpokes(FRONT, true, false);
+//  beginCourse();
 //  fixRobotLine();
 }
 

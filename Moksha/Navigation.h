@@ -29,7 +29,6 @@ enum Compass {
 void go(Direction dir, float amount, bool correct, bool constantSpeed) {
   setDirection(dir);
   if (dir == FRONT || dir == BACK){
-    //motors.totalSteps = amount; // linear calibration
     motors.totalSteps = amount * 216; // linear calibration
   } else if(dir == SLEFT || dir == SRIGHT){
     motors.totalSteps = amount * 800; // strafing calibration
@@ -66,17 +65,10 @@ void go(Direction dir, float amount, bool correct, bool constantSpeed) {
   }
 }
 
-void goUntilSpokes(Direction dir, float amount, bool correct, bool constantSpeed) {
+void goUntilSpokes(Direction dir, bool correct, bool constantSpeed) {
   setDirection(dir);
-  if (dir == FRONT || dir == BACK){
-    //motors.totalSteps = amount; // linear calibration
-    motors.totalSteps = amount * 216; // linear calibration
-  } else if(dir == SLEFT || dir == SRIGHT){
-    motors.totalSteps = amount * 800; // strafing calibration
-  } else {
-    motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
-  }
-
+  motors.totalSteps = 5000;
+  
   // set slow speed and start the motors
   if(constantSpeed) {
     motors.speed = 5000;
@@ -88,16 +80,13 @@ void goUntilSpokes(Direction dir, float amount, bool correct, bool constantSpeed
   motors.running = true;
 
   while(motors.running == true) {
-
-    if(correct) {
-      
     int spokes = 0;
     if(detect_spoke()) {
       motors.running = false;
       spokes++;
     }
-      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
-      //Serial.println(motors.alignRatio);
+    if(correct) { 
+      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;
     }
   }
 }
@@ -122,13 +111,14 @@ void fixRobotLine(){
 void goTo(int direction, int steps) {
   go(RIGHT, direction * 45, false, false);
   delay(500);
-  go(FRONT, 24, true, true);
-  go(FRONT, 180, false, false);
+  go(FRONT, 24, true, false);
+  delay(500);
+  go(RIGHT, 180, false, false);
   fixRobotLine();
-  goUntilSpokes(FRONT, 24, true, true);
+  goUntilSpokes(FRONT, true, false);
   delay(500);
   pickUp();
-  goUntilSpokes(FRONT, 24, true, true);
+  goUntilSpokes(FRONT, true, false);
   delay(250);
   go(FRONT, 15, false, false);
   delay(500);
