@@ -1,11 +1,3 @@
-struct Servo {
-  volatile bool state;
-  volatile int count;
-  volatile int maxCount;
-};
-
-Servo servo = { false, 0, 0};
-
 void runServo(Direction dir) {
   int speed, steps;
   if (dir == UP) {
