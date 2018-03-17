@@ -100,20 +100,19 @@ ISR(TIMER4_COMPA_vect) {
     }
   }
 }
-int spokes = 0;
 void go(Direction dir, float amount, bool correct, bool accelerate, bool stopIfSpokes, bool stopIfCenter) {
   setDirection(dir);
   if (dir == FRONT || dir == BACK){
     motors.totalSteps = amount * 216; // linear calibration
     
   } else if(dir == SLEFT || dir == SRIGHT){
-    motors.totalSteps = amount * 800; // strafing calibration
+    motors.totalSteps = amount * 228; // strafing calibration
 
   } else {
     motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
   }
 
-  if (stopIfSpokes || stopIfCenter) {
+  if (stopIfCenter) {
     motors.totalSteps = 5000;
   }
 
@@ -131,22 +130,13 @@ void go(Direction dir, float amount, bool correct, bool accelerate, bool stopIfS
     motors.accelerate = true;
     motors.speed = motors.minSpeed;
   } else {
-    motors.speed = 5000;
+    motors.speed = 1000;
     motors.accelerate = false;
   }
   
   motors.running = true;
 
   while(motors.running == true) {
-    if(stopIfSpokes) {
-      if (detect_spokes()) {
-        spokes++;
-        if(spokes >= 2) {
-          motors.totalSteps = 3240;
-          motors.steps = 2592;
-        }
-      }
-    }
     if(stopIfCenter) {
       if(detect_center()) {
         motors.running = false;
@@ -165,10 +155,6 @@ void goAccel(Direction dir, float amount, bool correct) {
   go(dir, amount, correct, true, false, false);
 }
 
-void goUntilSpokes(Direction dir, bool correct) {
-  go(dir, 0, correct, true, true, false);
-}
-
 void goUntilFound(Direction dir, bool correct) {
   go(dir, 0, correct, false, false, true);
 }
@@ -177,72 +163,90 @@ void goUntilReady(Direction dir, bool correct) {
   go(dir, 0, correct, false, false, true);
 }
 
-void goConst(Direction dir, float amount, bool correct) {
-  go(dir, amount, correct, false, false, false);
+
+
+void goUntilSpokes(Direction dir, bool correct) {
+  setDirection(dir);
+  motors.totalSteps = 2000;
+  motors.accelerate = true;
+  motors.speed = motors.minSpeed;
+  motors.running = true;
+  while(motors.running == true) {
+    if (detect_spokes()) {
+      // deaccelerate for 3 inches
+      motors.speed = motors.maxSpeed;
+      motors.totalSteps = 3240;
+      motors.steps = 2592;
+    }
+    if(correct) {
+      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;
+    }
+  }
+}
+
+void goConst(Direction dir, float amount, int speed, bool correct) {
+  setDirection(dir);
+  
+  if (dir == FRONT || dir == BACK){
+    motors.totalSteps = amount * 216; // linear calibration
+    
+  } else if(dir == SLEFT || dir == SRIGHT){
+    motors.totalSteps = amount * 228; // strafing calibration
+
+  } else {
+    motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
+  }
+  
+  motors.speed = speed;
+  motors.accelerate = false;
+  
+  motors.running = true;
+
+  while(motors.running == true) {
+    if(correct) {
+      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;
+    }
+  }
 }
 
 void alignRobot(){
-//  delay(250);
   float average = calculate_average();
-//  Serial.println(average);
   if(average > 4.5){
     while(average > 4.5){
-      goConst(SLEFT, 0.1, false);
+      goConst(SLEFT, 0.1, 5000, false);
       average = calculate_average();
     }
   }else if(average < 4.5){
     while(average < 4.5){
-      goConst(SRIGHT, 0.1, false);
+      goConst(SRIGHT, 0.1, 5000, false);
       average = calculate_average();
     }
   }
+}
+
+void correctRight() {
+  int count = 0;
+  while(count < 10) {
+    IR_filter();
+    if(!ir.filteredValues[7])
+      count++;
+    goConst(SLEFT, 0.1, 2000, false);
+  }
+  goConst(SRIGHT, 6.5, 2000, false);
 }
 
 void goUntilReady() {
   motors.steps = 0;
   motors.totalSteps = 2000;
   motors.accelerate = false;
-  motors.speed = 1000;
-  motors.running = true;
+  motors.speed = 800;
   setDirection(BACK);
+  motors.running = true;
 
   while(motors.running) {
-    
 //      Serial.println(motors.alignRatio);
     if(correct_exit()) {
       motors.running = false;
     }
-  }
-}
-
-void goTo(int direction, int steps) {
-  goAccel(RIGHT, direction * 45, false );
-    goUntilReady();
-  goAccel(BACK, 40, true);
-  goAccel(RIGHT, 180, true);
-  alignRobot();
-  goUntilSpokes(BACK, true);
-  goUntilFound(FRONT, true);
-  pickUp();
-}
-
-void beginCourse() {
-  goAccel(BACK, 43, false);
-  goConst(SRIGHT, 0.5, false);
-  delay(500);
-  for(int i = 5; i < 6; i++){
-    if(i!=4){
-      goTo(i, 48);
-      delay(500);
-      break;
-    }
-  }
-}
-
-void runPeriphery() {
-  for(int i = 0; i < 4; i++) {
-    goAccel(BACK, 60, true);
-    delay(1000);
-    goAccel(LEFT, 90, false);
   }
 }

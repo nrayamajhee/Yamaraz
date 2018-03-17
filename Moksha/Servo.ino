@@ -19,12 +19,21 @@ void runServo(Direction dir) {
 }
 
 void pickUp() {
+  digitalWrite(30, HIGH);
   runServo(DOWN);
   digitalWrite(11, LOW);
   delay(500);
   runServo(UP);
   delay(500);
+//  digitalWrite(11, HIGH);
+  delay(500);
+}
+
+void drop() {
+  runServo(DOWN);
   digitalWrite(11, HIGH);
+  delay(500);
+  runServo(UP);
   delay(500);
 }
 

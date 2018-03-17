@@ -1,7 +1,7 @@
 #define NUM_SENSORS   8
-#define TIMEOUT       1000
+#define TIMEOUT       2500
 #define EMITTER_PIN   2
-#define IR_THRESHHOLD 400
+#define IR_THRESHHOLD 700
 enum Direction {
   FRONT,
   BACK,
@@ -14,10 +14,21 @@ enum Direction {
   ALL
 };
 
+enum Color {
+  CYAN,
+  PURPLE,
+  YELLOW,
+  BLUE,
+  GREEN,
+  RED,
+  GRAY
+};
+
 struct Debug {
   bool steps;
   bool ir;
   bool servo;
+  bool light;
   bool motion;
 };
 

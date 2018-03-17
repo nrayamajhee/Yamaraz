@@ -24,7 +24,6 @@ void debug_IR() {
 //int cnt = 0;
 
 void IR_filter() {
-//  cnt++;
   qtrrc.read(ir.sensorValues);
   for (unsigned char i = 0; i < NUM_SENSORS; i++) {
     ir.filteredValues[i] = (ir.sensorValues[i] > IR_THRESHHOLD) ? 1 : 0;
@@ -36,7 +35,6 @@ void IR_filter() {
     }
   }
   Serial.println();
-//  delay(250);
 }
 //
 //float calculate_average() {
