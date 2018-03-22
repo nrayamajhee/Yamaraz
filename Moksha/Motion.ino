@@ -59,7 +59,6 @@ ISR(TIMER3_COMPA_vect) {
         motors.speed += ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
       }
     }
-//    
     // Toggle the left motors
     // and change duration for them
     setTimers(LEFT, motors.speed);
@@ -80,15 +79,7 @@ ISR(TIMER3_COMPA_vect) {
  */
 ISR(TIMER4_COMPA_vect) {
   if (motors.running) {
-    // Toggle the left motors
-    // and change duration  for them with the given ratio
-//    if(motors.alignCounter < 1000) {
-      setTimers(RIGHT, motors.alignRatio * motors.speed); 
-//      motors.alignCounter++;
-//    } else {
-//      setTimers(RIGHT, motors.speed); 
-//      motors.alignCounter = 0;
-//    }
+    setTimers(RIGHT, motors.alignRatio * motors.speed); 
     PORTL ^= 0x50;
     if(debug.steps) {
       Serial.print(" | ");
@@ -100,90 +91,6 @@ ISR(TIMER4_COMPA_vect) {
     }
   }
 }
-void go(Direction dir, float amount, bool correct, bool accelerate, bool stopIfSpokes, bool stopIfCenter) {
-  setDirection(dir);
-  if (dir == FRONT || dir == BACK){
-    motors.totalSteps = amount * 216; // linear calibration
-    
-  } else if(dir == SLEFT || dir == SRIGHT){
-    motors.totalSteps = amount * 228; // strafing calibration
-
-  } else {
-    motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
-  }
-
-  if (stopIfCenter) {
-    motors.totalSteps = 5000;
-  }
-
-  if(debug.motion){
-    Serial.print("Going ");
-    Serial.print(dir);
-    Serial.print(" by ");
-    Serial.print(amount);
-    Serial.print(" for ");
-    Serial.println(motors.totalSteps);
-  }
-
-  // set slow speed and start the motors
-  if(accelerate) {
-    motors.accelerate = true;
-    motors.speed = motors.minSpeed;
-  } else {
-    motors.speed = 1000;
-    motors.accelerate = false;
-  }
-  
-  motors.running = true;
-
-  while(motors.running == true) {
-    if(stopIfCenter) {
-      if(detect_center()) {
-        motors.running = false;
-      }
-    }
-    if(correct) {
-      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
-//      Serial.println(motors.alignRatio);
-//      motors.alignCounter = 0;
-      //Serial.println(motors.alignRatio);
-    }
-  }
-}
-
-void goAccel(Direction dir, float amount, bool correct) {
-  go(dir, amount, correct, true, false, false);
-}
-
-void goUntilFound(Direction dir, bool correct) {
-  go(dir, 0, correct, false, false, true);
-}
-
-void goUntilReady(Direction dir, bool correct) {
-  go(dir, 0, correct, false, false, true);
-}
-
-
-
-void goUntilSpokes(Direction dir, bool correct) {
-  setDirection(dir);
-  motors.totalSteps = 2000;
-  motors.accelerate = true;
-  motors.speed = motors.minSpeed;
-  motors.running = true;
-  while(motors.running == true) {
-    if (detect_spokes()) {
-      // deaccelerate for 3 inches
-      motors.speed = motors.maxSpeed;
-      motors.totalSteps = 3240;
-      motors.steps = 2592;
-    }
-    if(correct) {
-      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;
-    }
-  }
-}
-
 void goConst(Direction dir, float amount, int speed, bool correct) {
   setDirection(dir);
   
@@ -208,6 +115,93 @@ void goConst(Direction dir, float amount, int speed, bool correct) {
     }
   }
 }
+void goUntilSpokes(Direction dir, bool correct, int steps) {
+  setDirection(dir);
+  motors.totalSteps = 2000;
+  motors.accelerate = true;
+  motors.speed = motors.minSpeed;
+  motors.running = true;
+  int counter = 0;
+  bool counted = false;
+  while(motors.running == true) {
+    if (detect_spokes()) {
+      if(!counted) {
+        counter++;
+        counted = true;
+        motors.totalSteps = 2000;
+        motors.steps = 0;
+      }
+      // deaccelerate for 3 inches
+      if(counter >= steps){
+        motors.speed = motors.maxSpeed;
+        motors.totalSteps = 3240;
+        motors.steps = 2592;  
+      }
+    } else {
+      counted = false;
+    }
+    if(correct) {
+      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;
+    }
+  }
+}
+void go(Direction dir, float amount, bool correct, bool accelerate, bool stopIfSpokes, bool stopIfCenter) {
+  setDirection(dir);
+  if (dir == FRONT || dir == BACK){
+    motors.totalSteps = amount * 216; // linear calibration
+    
+  } else if(dir == SLEFT || dir == SRIGHT){
+    motors.totalSteps = amount * 228; // strafing calibration
+
+  } else {
+    motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
+  }
+  if (stopIfCenter) {
+    motors.totalSteps = 5000;
+  }
+
+  if(debug.motion){
+    Serial.print("Going ");
+    Serial.print(dir);
+    Serial.print(" by ");
+    Serial.print(amount);
+    Serial.print(" for ");
+    Serial.println(motors.totalSteps);
+  }
+
+  // set slow speed and start the motors
+  if(accelerate) {
+    motors.accelerate = true;
+    motors.speed = motors.minSpeed;
+  } else {
+    motors.accelerate = false;
+    motors.speed = 1000;
+  }
+  
+  motors.running = true;
+
+  while(motors.running == true) {
+    if(stopIfCenter) {
+      if(detect_center()) {
+        motors.running = false;
+      }
+    }
+    if(correct) {
+      motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
+//      Serial.println(motors.alignRatio);
+//      motors.alignCounter = 0;
+      //Serial.println(motors.alignRatio);
+    }
+  }
+}
+
+void goAccel(Direction dir, float amount, bool correct) {
+  go(dir, amount, correct, true, false, false);
+}
+
+void goUntilReady(Direction dir, bool correct) {
+  go(dir, 0, correct, false, false, true);
+}
 
 void alignRobot(){
   float average = calculate_average();
@@ -223,16 +217,26 @@ void alignRobot(){
     }
   }
 }
-
 void correctRight() {
   int count = 0;
-  while(count < 10) {
+  while(count < 5) {
     IR_filter();
     if(!ir.filteredValues[7])
       count++;
     goConst(SLEFT, 0.1, 2000, false);
   }
   goConst(SRIGHT, 6.5, 2000, false);
+}
+
+void correctFront() {
+  int count = 0;
+  while(count < 5) {
+    IR_filter();
+    if(!ir.filteredValues[3] || !ir.filteredValues[4])
+      count++;
+    goConst(BACK, 0.1, 2000, false);
+  }
+  goConst(FRONT, 3, 2000, false);
 }
 
 void goUntilReady() {

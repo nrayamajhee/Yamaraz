@@ -44,18 +44,22 @@ Motors motors = {
   false, 
   0, 
   0,
-  400,  // to misec delay
-  1500, // from misec delay
+  600,  // to misec delay
+  2000, // from misec delay
   0,
   1,     // turn ratio
   1,    // accelerate
+};
+Servo servo = {
+  false,
+  0,
   0
 };
-Servo servo = { false, 0, 0};
 IR ir = {
   0,
   0
 };
+bool spokes[6][5];
 void initialize() {
   DDRL = 0xFF;          // set port L to output
   pinMode(10, OUTPUT);  // servo output
@@ -66,28 +70,13 @@ void initialize() {
   initTimers();         // start the timers
   randomSeed(analogRead(0));
   setTimers(ALL, motors.minSpeed);
+  for (int i =0; i < 6; i++) {
+    for (int j =0; j < 5; j++) {
+      spokes[i][j] = false;
+    }
+  }
 //  calibrate_IR();
 }
-
-void returnHome(Color home, int steps, int direction) {
-  for(int i = 0; i < steps; i++) {
-    goAccel(FRONT, 12, true);
-  }
-  goAccel(FRONT, 6, true);
-  delay(500);
-  goAccel(LEFT, direction * 45, false);
-  goAccel(RIGHT, home * 45, false );
-  goAccel(BACK, 60, true);
-  drop();
-}
-
-void getCoin() {
-  goUntilSpokes(BACK, true);
-  goConst(BACK, 5.9, 2000, true);
-  alignRobot();
-  pickUp();
-}
-
 void beginCourse() {
   goAccel(BACK, 43, false);
   delay(500);
@@ -101,21 +90,50 @@ void beginCourse() {
     }
   }
 }
-
+void returnTo(Color color, int steps, int direction) {
+  goAccel(BACK, 4, false);
+  goAccel(RIGHT, 180, false);
+  delay(500);
+  goUntilSpokes(BACK, true, 1);
+  if(direction == 2 || direction == 6)
+    goAccel(BACK, steps * 6, true);
+   else
+    goAccel(BACK, steps * 8.5, true);
+  goAccel(BACK, 6, true);
+  goAccel(LEFT, abs(180 - (direction * 45)), false);
+  correctFront();
+  goAccel(RIGHT, color * 45, false );
+  if(color == 2 || color == 6)
+    goAccel(BACK, 40, true);
+  else
+    goAccel(BACK, 56, true);
+  goAccel(RIGHT, 180, false);
+  drop();
+//  goToGray(direction);
+}
+void goToGray(int direction) {
+//  if(direction == 2 || direction == 6)
+//    goAccel(BACK, steps * 6, true);
+//   else
+//    goAccel(BACK, steps * 8.5, true);
+}
 void goTo(int direction) {
   goAccel(RIGHT, direction * 45, false );
   goAccel(BACK, 10, true);
-  int steps = 0;
-  while(steps == 0) {
-    getCoin();
-    steps++;
+  int spokes = 0;
+  for(int i = 0; i < 4; i++) {
+    goUntilSpokes(BACK, true, 1);
+    goConst(BACK, 5.9, 2000, true);
+    alignRobot();
+    spokes++;
+    pickUp();
+    goConst(FRONT, 3, 2000, true);
   }
-  returnHome(calculate_color(), steps, direction);
-//  goUntilSpokes(BACK, true);
-//  goUntilFound(FRONT, true);
-//  pickUp();
+  returnTo(RED, spokes, direction);
 }
-
+void goFrom() {
+  goUntilSpokes(BACK, true, 1);
+}
 void runPeriphery() {
   for(int i = 0; i < 4; i++) {
     goAccel(BACK, 60, true);
@@ -123,7 +141,6 @@ void runPeriphery() {
     goAccel(LEFT, 90, false);
   }
 }
-
 /*
  * (from Wikipedia)
  *
@@ -136,12 +153,9 @@ void runPeriphery() {
  */
 void setup() {
   initialize();
-//  correctRight();
-
   beginCourse();
-//  digitalWrite(11, LOW);
+//  returnTo(3, 4, 5);
 }
-
 void loop() {
 //  pickUp();
 }

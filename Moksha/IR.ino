@@ -36,14 +36,6 @@ void IR_filter() {
   }
   Serial.println();
 }
-//
-//float calculate_average() {
-//  IR_filter();
-//  float right = ir.filteredValues[0] * 4 + ir.filteredValues[1] * 3 + ir.filteredValues[2] * 2;
-//  float left =  ir.filteredValues[7] * 4 + ir.filteredValues[6] * 3 + ir.filteredValues[5] * 2;
-//  return left - right;
-//}
-
 float calculate_average() {
   IR_filter();
     float avg = 4.5;
@@ -51,7 +43,7 @@ float calculate_average() {
 
     float onCount = 0;
 
-    for(int i = 0; i < 8; i++){
+    for(int i = 0; i < NUM_SENSORS; i++){
       if(ir.filteredValues[i] == 1){
         onCount++;
       }

@@ -21,7 +21,8 @@ enum Color {
   BLUE,
   GREEN,
   RED,
-  GRAY
+  GRAY,
+  INVALID
 };
 
 struct Debug {
@@ -41,7 +42,6 @@ struct Motors {
   volatile int speed;
   volatile float alignRatio;
   volatile bool accelerate;
-  volatile int alignCounter;
 };
 
 struct IR {
