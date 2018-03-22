@@ -16,9 +16,23 @@ void init_light() {
 }
 
 Color calculate_color() {
-  uint16_t r, g, b, c;// colorTemp, lux;  
+  uint16_t r, g, b, c;// colorTemp, lux; 
+  
   tcs.getRawData(&r, &g, &b, &c);
   float hue = atan2(1.732*(g-b), 2*r-g-b) * (180 / 3.1415);
+  float C_max = r;
+  if(g > r){
+    C_max = g;
+  }else if(b > r){
+    C_max = b;
+  }
+  float C_min = r;
+    if(g < r){
+    C_min = g;
+  }else if(b < r){
+    C_min = b;
+  }
+  float saturation  = (C_max - C_min)/C_max;
 //  colorTemp = tcs.calculateColorTemperature(r, g, b);
 //  lux = tcs.calculateLux(r, g, b);
   if(debug.light) {
@@ -28,21 +42,32 @@ Color calculate_color() {
     Serial.print("\t");
     Serial.print(b);
     Serial.print(": ");
-    Serial.println(hue);  
+    Serial.println(hue);
+    Serial.print("Saturation: ");
+    Serial.println(saturation);  
+    Serial.println("Clear value");
+    Serial.print(c);
+    Serial.println(" ");
   }
-  return random(7);
-  digitalWrite(30, LOW);
-//  if(hue < 30 || hue > 330) {
-//    return RED;
-//  } else if(hue < 50 && hue > 30) {
-//    return YELLOW;  
-//  } else if(hue < 150 && hue > 50) {
-//    return GREEN;
-//  } else if(hue < 210 && hue > 150) {
-//    return CYAN;   
-//  } else if(hue < 270 && hue > 210) {
-//    return BLUE;
-//  } else if(hue < 330 && hue > 270) {
-//    return PURPLE;
-//  }
+//  return RED;
+//  digitalWrite(30, LOW);
+  if(hue < 35 && hue > 0.5) {
+    if(saturation > 0.30){
+      return RED;
+    }else if(saturation < 0.35){
+      return PURPLE;
+    }
+  }else if(hue > 55) {
+    if(saturation > 0.25){
+      return GREEN;
+    }else if(saturation < 0.25){
+      return BLUE;
+    } 
+  }else if(hue < 0.5) {
+    return CYAN;  
+  }else if(hue < 330 && hue > 270) {
+    return PURPLE;
+  }else if(hue > 35 && hue < 55){
+    return YELLOW;
+  }
 }

@@ -37,7 +37,7 @@ Debug debug   = {
   0,
   0, // IR
   0,
-  0,
+  1,
   0
 };
 Motors motors = {
@@ -127,9 +127,11 @@ void goTo(int direction) {
     alignRobot();
     spokes++;
     pickUp();
+    Color found = calculate_color();
+    if(found != INVALID)
+      returnTo(found, spokes, direction);
     goConst(FRONT, 3, 2000, true);
   }
-  returnTo(RED, spokes, direction);
 }
 void goFrom() {
   goUntilSpokes(BACK, true, 1);
@@ -153,9 +155,16 @@ void runPeriphery() {
  */
 void setup() {
   initialize();
-  beginCourse();
+  runServo(UP);
+//  beginCourse();
 //  returnTo(3, 4, 5);
+
+  digitalWrite(30, HIGH);
 }
 void loop() {
 //  pickUp();
+Color color = calculate_color();
+Serial.print("Color: ");
+Serial.println(color);
+//  drop();
 }
