@@ -101,7 +101,7 @@ void goConst(Direction dir, float amount, int speed, bool correct) {
     motors.totalSteps = amount * 228; // strafing calibration
 
   } else {
-    motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
+    motors.totalSteps = (int)ceil(amount * 24); // angular calibration
   }
   
   motors.speed = speed;
@@ -131,7 +131,7 @@ void goUntilSpokes(Direction dir, bool correct, int steps) {
         motors.totalSteps = 2000;
         motors.steps = 0;
       }
-      // deaccelerate for 3 inches
+      // deaccelerate for 3 in * 216 steps
       if(counter >= steps){
         motors.speed = motors.maxSpeed;
         motors.totalSteps = 3240;
@@ -145,8 +145,8 @@ void goUntilSpokes(Direction dir, bool correct, int steps) {
     }
   }
 }
-void go(Direction dir, float amount, bool correct, bool accelerate, bool stopIfSpokes, bool stopIfCenter) {
-  setDirection(dir);
+void goAccel(Direction dir, float amount, bool correct) {
+  setDirection (dir);
   if (dir == FRONT || dir == BACK){
     motors.totalSteps = amount * 216; // linear calibration
     
@@ -155,9 +155,6 @@ void go(Direction dir, float amount, bool correct, bool accelerate, bool stopIfS
 
   } else {
     motors.totalSteps = (int)ceil(amount * 24.2); // angular calibration
-  }
-  if (stopIfCenter) {
-    motors.totalSteps = 5000;
   }
 
   if(debug.motion){
@@ -170,37 +167,15 @@ void go(Direction dir, float amount, bool correct, bool accelerate, bool stopIfS
   }
 
   // set slow speed and start the motors
-  if(accelerate) {
-    motors.accelerate = true;
-    motors.speed = motors.minSpeed;
-  } else {
-    motors.accelerate = false;
-    motors.speed = 1000;
-  }
-  
+  motors.accelerate = true;
+  motors.speed = motors.minSpeed;
   motors.running = true;
 
   while(motors.running == true) {
-    if(stopIfCenter) {
-      if(detect_center()) {
-        motors.running = false;
-      }
-    }
     if(correct) {
       motors.alignRatio = 1 + (calculate_average() - 4.5) * .1;        //1 is calibrated value; Dr Gray says either use .25 or .35 for better control
-//      Serial.println(motors.alignRatio);
-//      motors.alignCounter = 0;
-      //Serial.println(motors.alignRatio);
     }
   }
-}
-
-void goAccel(Direction dir, float amount, bool correct) {
-  go(dir, amount, correct, true, false, false);
-}
-
-void goUntilReady(Direction dir, bool correct) {
-  go(dir, 0, correct, false, false, true);
 }
 
 void alignRobot(){
@@ -237,20 +212,4 @@ void correctFront() {
     goConst(BACK, 0.1, 2000, false);
   }
   goConst(FRONT, 3, 2000, false);
-}
-
-void goUntilReady() {
-  motors.steps = 0;
-  motors.totalSteps = 2000;
-  motors.accelerate = false;
-  motors.speed = 800;
-  setDirection(BACK);
-  motors.running = true;
-
-  while(motors.running) {
-//      Serial.println(motors.alignRatio);
-    if(correct_exit()) {
-      motors.running = false;
-    }
-  }
 }

@@ -33,8 +33,8 @@ void IR_filter() {
       Serial.print(ir.filteredValues[i]);
       Serial.print('\t');
     }
+    Serial.println();
   }
-  Serial.println();
 }
 float calculate_average() {
   IR_filter();
