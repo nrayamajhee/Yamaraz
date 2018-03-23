@@ -3,7 +3,7 @@
 #include "Adafruit_TCS34725.h"
 
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X);
-int col = 0;
+int col = WHITE;
 Color calculate_color() {
   uint16_t r, g, b, c;
   for(int i = 0; i < 2; i++)
@@ -11,7 +11,7 @@ Color calculate_color() {
 
   float min = -1;
   int indx = 0;
-  for(int i = 0; i <= 8; i++) {
+  for(int i = 0; i < 8; i++) {
     float calc = sqrt(pow((r - colors[i].r), 2) + pow((g - colors[i].g), 2) + pow((b - colors[i].b), 2));
     if (min == -1) min = calc;
     if (calc < min) {

@@ -1,5 +1,6 @@
-void runServo(Direction dir) {
-  int speed, steps;
+void run_servo(Direction dir) {
+  int speed  = 0;
+  int steps = 0;
   if (dir == UP) {
     speed = 500;
     steps = 300;
@@ -7,31 +8,26 @@ void runServo(Direction dir) {
     speed = 2500;
     steps = 300;
   }
-  int cnt = 0;
   int highDelay = speed;
   int lowDelay = 20000 - speed;
-  
-  while (cnt < steps){
+  for (int cnt =0; cnt < steps; cnt++){
     digitalWrite(10, HIGH);
     delayMicroseconds(highDelay);
     digitalWrite(10, LOW);
     delayMicroseconds(lowDelay);
-    cnt++;
   }
 }
 
-void pickUp() {
+void pick_up() {
   digitalWrite(LIGHT_PIN, HIGH);
-  runServo(DOWN);
+  run_servo(DOWN);
   digitalWrite(MAGNET_PIN, LOW);
-  delay(500);
-  runServo(UP);
+  run_servo(UP);
 }
 
 void drop() {
-  runServo(DOWN);
+  run_servo(DOWN);
   digitalWrite(MAGNET_PIN, HIGH);
-  delay(500);
-  runServo(UP);
+  run_servo(UP);
 }
 

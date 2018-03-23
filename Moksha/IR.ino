@@ -3,7 +3,7 @@
 QTRSensorsRC qtrrc((unsigned char[]) {22, 23, 24, 25, 26, 27, 28, 29},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN);
 
-void calibrate_IR() {
+void IR_calibrate() {
   int calArray[] = {240, 180, 124, 180, 184, 248, 240, 300};
   qtrrc.calibrate();
   for(int i = 0; i < NUM_SENSORS; i++) {
@@ -12,7 +12,7 @@ void calibrate_IR() {
   }
 }
 
-void debug_IR() {
+void IR_display_raw() {
   qtrrc.read(ir.sensorValues);
   for (unsigned char i = 0; i < NUM_SENSORS; i++) {
     Serial.print(ir.sensorValues[i]);
@@ -22,7 +22,6 @@ void debug_IR() {
 }
 
 //int cnt = 0;
-
 void IR_filter() {
   qtrrc.read(ir.sensorValues);
   for (unsigned char i = 0; i < NUM_SENSORS; i++) {
@@ -36,59 +35,39 @@ void IR_filter() {
     Serial.println();
   }
 }
-float calculate_average() {
-  IR_filter();
-    float avg = 4.5;
-    float sum = ir.filteredValues[0] + 2*ir.filteredValues[1] + 3*ir.filteredValues[2] + 4*ir.filteredValues[3]+5*ir.filteredValues[4] + 6*ir.filteredValues[5] + 7*ir.filteredValues[6] + 8*ir.filteredValues[7];
-
-    float onCount = 0;
-
+float IR_calculate_offset() {
+    IR_filter();
+    float sum = 0;
+    float numActive = 0;
     for(int i = 0; i < NUM_SENSORS; i++){
-      if(ir.filteredValues[i] == 1){
-        onCount++;
-      }
+      sum += ir.filteredValues[i] * (i + 1);
+      numActive++;
     }
-
-    if(onCount == 0){
-      onCount = 4.5;
-    }
-
-    float newAverage = sum / onCount;
-
-    if(onCount > 2){
-      newAverage = 4.5;
-    }
-    return newAverage;
-    //Serial.println(motors.alignRatio);
-
+    if(numActive == 0)
+      return 0;
+    else
+      return (sum / numActive) - 4.5;
 }
-
-bool detect_spokes() {
+bool IR_detect_spokes() {
+  IR_filter();
   if((ir.filteredValues[3] || ir.filteredValues[4]) &&  (ir.filteredValues[0] || ir.filteredValues[7])) {
     return true;
   }
   return false;
 }
 
-bool detect_center() {
-  if(ir.filteredValues[2] && ir.filteredValues[5]){
-    return true;
-  }
-  return false;
-}
-
-bool correct_exit() {
-  IR_filter();
-  if((ir.filteredValues[3] || ir.filteredValues[4]) && (!ir.filteredValues[0] && !ir.filteredValues[1] && !ir.filteredValues[2] && !ir.filteredValues[5] && !ir.filteredValues[6] && !ir.filteredValues[7])){
-    return true;
-  }
-  if(!ir.filteredValues[7] && !ir.filteredValues[6] && !ir.filteredValues[5] && (ir.filteredValues[4] && ir.filteredValues[3] && ir.filteredValues[2] && ir.filteredValues[1] && ir.filteredValues[1])){
-    motors.alignRatio= 1.9;
-  } else if(!ir.filteredValues[0] && !ir.filteredValues[1] && !ir.filteredValues[2] && (ir.filteredValues[3] && ir.filteredValues[4] && ir.filteredValues[5] && ir.filteredValues[6] && ir.filteredValues[7])){
-    motors.alignRatio= 0.1;
-  } else {
-    motors.alignRatio = 1;
-  }
-  return false;
-}
+//bool correct_exit() {
+//  IR_filter();
+//  if((ir.filteredValues[3] || ir.filteredValues[4]) && (!ir.filteredValues[0] && !ir.filteredValues[1] && !ir.filteredValues[2] && !ir.filteredValues[5] && !ir.filteredValues[6] && !ir.filteredValues[7])){
+//    return true;
+//  }
+//  if(!ir.filteredValues[7] && !ir.filteredValues[6] && !ir.filteredValues[5] && (ir.filteredValues[4] && ir.filteredValues[3] && ir.filteredValues[2] && ir.filteredValues[1] && ir.filteredValues[1])){
+//    motors.alignRatio= 1.9;
+//  } else if(!ir.filteredValues[0] && !ir.filteredValues[1] && !ir.filteredValues[2] && (ir.filteredValues[3] && ir.filteredValues[4] && ir.filteredValues[5] && ir.filteredValues[6] && ir.filteredValues[7])){
+//    motors.alignRatio= 0.1;
+//  } else {
+//    motors.alignRatio = 1;
+//  }
+//  return false;
+//}
 
