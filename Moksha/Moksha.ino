@@ -38,7 +38,7 @@
 #define LIGHT_PIN 30
 #define SERVO_PIN 10
 #define MAGNET_PIN 11
-#define TURN_SCALE 0.1;
+#define TURN_SCALE 0.25;
 /*
  * (from Wikipedia)
  *
@@ -63,8 +63,9 @@ enum Direction {
 enum Color {
   WHITE,
   CYAN,
-  PURPLE,
+  MAGENTA,
   YELLOW,
+  HOME,
   BLUE,
   GREEN,
   RED,
@@ -72,19 +73,20 @@ enum Color {
   INVALID
 };
 struct RGB {
-  int r;
-  int g;
-  int b;
+  long r;
+  long g;
+  long b;
 };
-RGB colors[8] = {
-  {1200, 1900, 1900},
-  {1000, 700, 700},
-  {3500, 2500, 1600},
-  {1000, 1000, 1200},
-  {1500, 1700, 1000},
-  {1400, 500, 400},
-  {800, 800, 700},
-  {700, 600, 490},
+RGB colors[9] = {
+  {1100, 1700, 1630},
+  {1200, 800, 780},
+  {3130, 2740, 1630},
+  {5000, 5000, 5000},
+  {870, 1050, 1200},
+  {1340, 1540, 915},
+  {1460, 580, 480},
+  {950, 900, 720},
+  {697, 600, 450}
 };
 struct Debug {
   bool steps;
@@ -111,8 +113,8 @@ struct Motors {
   volatile bool accelerate;
 };
 Motors motors = {
-  false, 
-  0, 
+  false,
+  0,
   0,
   800,  // to misec delay
   2000, // from misec delay
@@ -129,7 +131,6 @@ bool spokes[6][5];
 void initialize() {
   DDRL = 0xFF;                // set port L to output
   pinMode(SERVO_PIN, OUTPUT);  // servo output
-  pinMode(MAGNET_PIN, OUTPUT);  // magenet output
   pinMode(LIGHT_PIN, OUTPUT);  // light
   digitalWrite(LIGHT_PIN, LOW);  // turn off the eye straining LED
   Serial.begin(9600);
@@ -142,16 +143,24 @@ void initialize() {
     }
   }
 }
+void begin_course() {
+//  go(BACK, 43, false);
+//  correct_right();
+  go_to(CYAN);
+}
 void setup() {
   initialize();
-  go(BACK, 43, false);
-  correct_right();
-  go_to(CYAN);
-//  go_to_gray(4);
-//digitalWrite(LIGHT_PIN, HIGH);
+//  digitalWrite(LIGHT_PIN, HIGH);
+//  begin_course();
+run_periphery();
+//go_to_gray(MAGENTA);
+//strafe_align();
+//go_to_gray(1);
+//go(BACK, 20, true);
 }
 void loop() {
-//pickUp();
-//Serial.println(calculate_color());
-//drop();
+//  pick_up();
+//  Serial.println(calculate_color());
+//  drop();
+//  Serial.println(IR_calculate_offset());
 }

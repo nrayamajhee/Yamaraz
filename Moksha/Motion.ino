@@ -169,9 +169,10 @@ void strafe_align(){
   int average = 0;
   do {
     average = IR_calculate_offset();
-    if(average > 4.5){
+    Serial.println(average);
+    if(average > 0){
       go_const(SLEFT, 0.1, 5000, false);
-    } else if(average > 4.5){
+    } else if(average < 0){
       go_const(SRIGHT, 0.1, 5000, false);
     }
   } while(average != 0);

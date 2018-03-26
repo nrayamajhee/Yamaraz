@@ -40,13 +40,20 @@ float IR_calculate_offset() {
     float sum = 0;
     float numActive = 0;
     for(int i = 0; i < NUM_SENSORS; i++){
-      sum += ir.filteredValues[i] * (i + 1);
-      numActive++;
+      bool value = ir.filteredValues[i];
+      if(value) {
+        numActive++; 
+        sum += value * (i + 1);
+      }
     }
-    if(numActive == 0)
-      return 0;
-    else
-      return (sum / numActive) - 4.5;
+    
+    float offset = sum / numActive - 4.5;
+    if(numActive == 0 || numActive > 2 || abs(offset) == 0.5) {
+      return 0; 
+    }
+    else {
+      return offset;
+    }
 }
 bool IR_detect_spokes() {
   IR_filter();

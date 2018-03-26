@@ -19,15 +19,16 @@ void run_servo(Direction dir) {
 }
 
 void pick_up() {
+  pinMode(MAGNET_PIN, OUTPUT);  // magenet output
   digitalWrite(LIGHT_PIN, HIGH);
-  run_servo(DOWN);
   digitalWrite(MAGNET_PIN, LOW);
+  run_servo(DOWN);
   run_servo(UP);
 }
 
 void drop() {
   run_servo(DOWN);
-  digitalWrite(MAGNET_PIN, HIGH);
+  pinMode(MAGNET_PIN, INPUT);  // magenet output
   run_servo(UP);
 }
 
