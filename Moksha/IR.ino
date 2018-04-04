@@ -1,4 +1,15 @@
 #include <QTRSensors.h>
+#define TIMEOUT       2500
+#define EMITTER_PIN   3
+#define IR_THRESHHOLD 700
+
+
+struct IR {
+  unsigned int  sensorValues  [NUM_SENSORS];
+  bool          filteredValues[NUM_SENSORS];
+};
+IR ir;
+IR ir2;
 
 QTRSensorsRC qtrrc((unsigned char[]) {22, 23, 24, 25, 26, 27, 28, 29},
   NUM_SENSORS, TIMEOUT, EMITTER_PIN);

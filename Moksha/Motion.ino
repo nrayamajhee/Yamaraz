@@ -1,3 +1,26 @@
+#define TURN_SCALE    0.2
+
+struct Motors {
+  volatile bool running;
+  volatile int steps;
+  volatile long totalSteps;
+  int maxSpeed;
+  int minSpeed;
+  volatile int speed;
+  volatile float alignRatio;
+  volatile bool accelerate;
+};
+Motors motors = {
+  false,
+  0,
+  0,
+  600,  // to misec delay
+  2000, // from misec delay
+  0,
+  1,     // turn ratio
+  1,    // accelerate
+};
+
 void set_direction(Direction dir) {
   if (dir == FRONT) {
     PORTL = 0x0A;
@@ -91,6 +114,12 @@ ISR(TIMER4_COMPA_vect) {
   }
 }
 void set_steps(Direction dir, float amount){
+  // if negative angles
+  if(amount < 0) {
+    if(dir == RIGHT) dir = LEFT;
+    else dir = RIGHT;
+    amount = 180 + amount;
+  }
   set_direction(dir);
   if (dir == FRONT || dir == BACK){
     motors.totalSteps = amount * 216; // linear calibration
@@ -138,9 +167,9 @@ void go_const(Direction dir, float amount, int speed, bool correct) {
   motors.running = true;
   update_motors(correct, dir);
 }
-void go_until_spokes(Direction dir, bool correct, int steps) {
+void go_until_spokes(Direction dir, int steps, bool correct) {
   set_direction(dir);
-  // will only run a maximum of 2000 steps as a safety precaus
+  // will only run a maximum of 5000 steps as a safety precaus
   motors.totalSteps = 5000;
   motors.steps = 0;
   motors.accelerate = true;

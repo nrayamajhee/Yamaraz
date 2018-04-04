@@ -4,8 +4,24 @@
 
 #define LIGHT_PIN 2
 
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_4X);
-int col = CYAN;
+struct RGB {
+  long r;
+  long g;
+  long b;
+};
+
+RGB colors[8] = {
+  {20000, 30000, 30000}, //C
+  {11000, 7700 , 10000}, //M
+  {40500, 42500, 23500}, //Y
+  {6000, 11500, 16700}, //B
+  {14500, 23200, 12600}, //G
+  {13000, 5400, 5000}, //R
+  {5700, 7600, 7000}, //G
+  {2500, 2500, 2400}  //IN
+};
+
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_700MS, TCS34725_GAIN_1X);
 
 void init_light() {
   pinMode(LIGHT_PIN, OUTPUT);
@@ -18,14 +34,22 @@ Color calculate_color() {
   uint16_t r, g, b, c;
   for(int i = 0; i < 2; i++)
     tcs.getRawData(&r, &g, &b, &c);
-
+ r = r/100;
+ b = b/100;
+ g = g/100;
   float min = -1;
   int indx = 0;
   for(int i = 0; i < 8; i++) {
-    float red = pow ((float)r - colors[i].r,2);
-    float green =  pow ((float)g - colors[i].g,2);
-    float blue = pow ((float)b - colors[i].b,2);
-    float calc = red + green + blue;
+    long Rx = (colors[i].r)/100;
+    long Bx = (colors[i].b)/100;
+    long Gx = (colors[i].g)/100;
+
+    
+    long red = pow ((long)r -  Rx,2);
+    long green =  pow ((long)g - Gx,2);
+    long blue = pow ((long)b - Bx,2);
+    
+    long calc = red + green + blue;
     if(debug.light){
       Serial.println();
       Serial.print("i = ");
@@ -56,7 +80,4 @@ Color calculate_color() {
     return indx + 1;
   else
     return indx + 2;
-//  col++;
-//  if(col == HOME) col++;
-//  return col;
 }

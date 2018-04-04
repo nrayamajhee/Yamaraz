@@ -1,55 +1,47 @@
 #define SERVO_PIN1 6
 #define SERVO_PIN2 10
-
-void get_servo(Direction dir) {
-  int speed  = 0;
-  int steps = 0;
-  if (dir == RIGHT) {
-    speed = 2400;
-    steps = 150;
-  } else if (dir == LEFT) {
-    speed = 1590;
-    steps = 150;
-  }
-  int highDelay = speed;
-  int lowDelay = 20000 - speed;
-  for (int cnt =0; cnt < steps; cnt++){
-    digitalWrite(SERVO_PIN1, LOW);
-    delayMicroseconds(lowDelay);
-    digitalWrite(SERVO_PIN1, HIGH);
-    delayMicroseconds(highDelay);
-  }
-  digitalWrite(SERVO_PIN1, LOW);
-  delayMicroseconds(lowDelay);
-}
+#define MAGNET_PIN    11
 
 void run_servo(Direction dir) {
   int speed  = 0;
   int steps = 0;
-  if (dir == UP) {
-    speed = 800;
-    steps = 300;
-  } else if (dir == DOWN) {
-    speed = 2150;
-    steps = 300;
+  int pin = 0;
+  if ((dir == RIGHT) || (dir == LEFT)) {
+    pin = 1;
+    if (dir == RIGHT) {
+      speed = 2400;
+      steps = 150;
+    } else {
+      speed = 1590;
+      steps = 150;
+    }
+  } else if ((dir == UP)  || (dir == DOWN)) {
+    pin = 2;
+    if(dir == UP) {
+      speed = 800;
+      steps = 300;
+    } else  {
+      speed = 2150;
+      steps = 300;
+    }
   }
   int highDelay = speed;
   int lowDelay = 20000 - speed;
   for (int cnt =0; cnt < steps; cnt++){
-    digitalWrite(SERVO_PIN2, LOW);
+    digitalWrite(pin, LOW);
     delayMicroseconds(lowDelay);
-    digitalWrite(SERVO_PIN2, HIGH);
+    digitalWrite(pin, HIGH);
     delayMicroseconds(highDelay);
   }
-  digitalWrite(SERVO_PIN1, LOW);
+  digitalWrite(pin, LOW);
   delayMicroseconds(lowDelay);
 }
 
 void init_servo() {
   pinMode(SERVO_PIN1, OUTPUT);
   pinMode(SERVO_PIN2, OUTPUT);
+  run_servo(RIGHT);
   run_servo(UP);
-  get_servo(RIGHT);
 }
 
 
@@ -58,16 +50,13 @@ Color pick_up() {
   digitalWrite(MAGNET_PIN, LOW);
   run_servo(DOWN);
   run_servo(UP);
-  get_servo(LEFT);
+  run_servo(LEFT);
   Color found = calculate_color();
-  get_servo(RIGHT);
+ run_servo(RIGHT);
   return found;
 }
 
 void drop() {
-  get_servo(RIGHT);
-  run_servo(DOWN);
   pinMode(MAGNET_PIN, INPUT);  // magenet output
-  run_servo(UP);
 }
 

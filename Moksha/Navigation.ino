@@ -1,26 +1,36 @@
-extern bool matrix[8][4];
-
+bool matrix[8][4];
+void init_matrix(){
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 4; j++) {
+      if((i == HOME )|| (i == INVALID))  matrix[i][j] = true;
+      else {
+        if((ROUND == 1) && ((j % 2) == 1))
+          matrix[i][j] = true;
+        else
+          matrix[i][j] = false;
+      }
+    }
+  }
+}
 bool is_diag(int turn) {
   if(turn == 2 || turn == 6)
     return false;
    else
     return true;
 }
-void return_to_gray(Color from, int steps) {
-  go_until_spokes(FRONT, true, 1);
-  if(is_diag(from))
-    go(FRONT, steps * 8.5, true);
-  else
-    go(FRONT, steps * 6, true);
-  go(FRONT, 6, true);
-  int dir = 180 - (from * 45);
-  if (dir < 0)
-    go(LEFT, abs(dir), false);
-  else
-    go(RIGHT, abs(dir), false);
-  correct_front();
+Color find_next_color_coin(Color from) {
+  for (int i = 1; i < 8; i++) {
+    if (i != HOME) {
+    for (int j = 0; j < 4; j++) {
+        if(matrix[i][j] == false) {
+          return i;
+        }
+      }  
+    }
+  }
+  return HOME;
 }
-int check_matrix(Color col, bool forward) {
+int find_coin_pos(Color col, bool forward) {
   if(forward) {
     for(int j = 0; j < 4; j++) {
       if(matrix[col][j] == false) {
@@ -36,150 +46,13 @@ int check_matrix(Color col, bool forward) {
   }
   return -1;
 }
-Color check_matrix_next(Color from) {
-  for (int i = 1; i < 8; i++) {
-    if (i != HOME) {
-    for (int j = 0; j < 4; j++) {
-        if(matrix[i][j] == false) {
-          return i;
-        }
-      }  
-    }
-  }
-  return HOME;
+void rotate(Color from, Color to) {
+   int diff = (to - from) * 45;
+    if (diff >= 180) diff = 180 - diff;
+    else if (diff <= -180) diff = abs(diff) - 180;
+    go(LEFT, diff, false);
 }
-void go_to(Color color) {
-  if(color == HOME) {
-    go(RIGHT, 180, false);
-    go(FRONT, 43, false);
-    return;
-  }
-  int spokes = 0;
-  int currentSpoke = check_matrix(color, true);
-  if(currentSpoke == -1) {
-    go_to(check_matrix_next(color));
-    return;
-  }
-  go(RIGHT, color * 45, false);
-  go_const(FRONT, 6, 1000, true);
-  for(int i = 0; i < 4; i++) {
-    currentSpoke = check_matrix(color, true);
-    if(currentSpoke == -1) {
-      go_to(check_matrix_next(color));
-      break;
-    }
-    go_until_spokes(FRONT, true, currentSpoke - spokes);
-    spokes++;
-    delay(200);
-    correct_angle();
-    delay(200);
-    strafe_align();
-    if(is_diag(color))
-      go_const(BACK, 5.5, 2000, true);
-    else
-      go_const(BACK, 6, 2000, true);
-    delay(200);
-    strafe_align();
-    // first pickup
-    Color found = pick_up();
-    if(found == INVALID) {
-//      go_const(FRONT, 6, 2000, true);
-//      delay(500);
-//      correct_angle();
-//      strafe_align();
-//      correct_angle();
-//      delay(500);
-//      go_const(BACK, 6, 2000, false);
-//      // second pickup
-//      found = pick_up();
-      matrix[color][currentSpoke - 1] = true;
-    }
-    if(found != INVALID) {
-      matrix[color][currentSpoke - 1] = true;
-      go(FRONT, 10, false);
-      delay(500);
-      go(RIGHT, 180, false);
-      return_to_gray(color, currentSpoke);
-      if(found == GRAY) {
-        go_const(BACK, 4, 1000, false);
-        drop();
-        go_const(FRONT, 4, 1000, false);
-        correct_front();
-        go_to(color+1);
-      } else {
-        return_to(found); 
-      }
-      break;
-    } 
-    drop();
-    go_const(FRONT, 4, 1000, true);
-  }
-//  go(FRONT, 10, false);
-//  delay(500);
-//  go(RIGHT, 180, false);
-//  return_to_gray(color, spokes);
-//  go_to(color+1);
-}
-void go_to_gray(Color from) {
-  int spokes = 0;
-  if(is_diag(from))
-    go_const(FRONT, 5, 1000, true);
-  else
-    go_const(FRONT, 2, 1000, true);
-  for(int i = 0; i < 4; i++) {
-    int currentSpoke = check_matrix(from, false);
-    if(currentSpoke == -1) {
-      return_to_gray(from, 4);
-      go_to(check_matrix_next(from));
-      break;
-    }
-    go_until_spokes(FRONT, true, 5 - currentSpoke - spokes);
-    spokes = 5 - currentSpoke;
-    delay(200);
-    correct_angle();
-    delay(200);
-    strafe_align();
-    if(is_diag(from))
-      go_const(BACK, 7, 2000, false);
-    else
-      go_const(BACK, 6, 2000, false);
-    delay(200);
-    strafe_align();
-    Color found = pick_up();
-    if(found == INVALID) {
-//      go_const(FRONT, 6, 2000, false);
-//      delay(500);
-//      correct_angle();
-//      strafe_align();
-//      correct_angle();
-//      delay(500);
-//      go_const(BACK, 6, 2000, false);
-//      // second pickup
-//      found = pick_up();
-      matrix[from][currentSpoke - 1] = true;
-    }
-    if(found != INVALID) {
-      matrix[from][currentSpoke - 1] = true;
-      return_to_gray(from, currentSpoke);
-      if(found == GRAY) {
-        go_const(BACK, 4, 1000, false);
-        drop();
-        go_const(FRONT, 4, 1000, false);
-        correct_front();
-        go_to(from+1);
-      } else {
-        return_to(found); 
-      }
-      break;
-    }
-    drop();
-    go_const(FRONT, 6, 1000, true);
-  }
-//  return_to_gray(from, spokes);
-//  go_to(from+1);
-}
-void return_to(Color to) {
-  go(RIGHT, to * 45, false );
+void return_to_color(Color to) {
   if(is_diag(to))
     go(FRONT, 44, true);
   else
@@ -191,5 +64,111 @@ void return_to(Color to) {
   drop(); 
   delay(500);
   go(RIGHT, 180, false);
-  go_to_gray(to);
+  go_pick(to, false);
+}
+void return_to_gray(Color from, int steps) {
+  go_until_spokes(FRONT, true, 1);
+  if(is_diag(from))
+    go(FRONT, steps * 8.5, true);
+  else
+    go(FRONT, steps * 6, true);
+  go(FRONT, 7, true);
+}
+void get_out_of_box(Color color) {
+  if(is_diag(color))
+      go_const(FRONT, 6, 1000, true);
+    else
+      go_const(FRONT, 3, 1000, true);
+}
+void go_pick_next(Color color, bool fromCenter, int spokes) {
+  if(fromCenter) {
+    go(FRONT, 10, false);
+    go(RIGHT, 180, false);
+    return_to_gray(color, spokes);
+  } else {
+    return_to_gray(color, 5 - spokes);
+  }
+  int dest = find_next_color_coin(color);
+  rotate(dest, color); 
+  go_pick(dest, fromCenter);
+}
+void align_to_coin(Color color, bool fromCenter) {
+  delay(200);
+    correct_angle();
+    delay(200);
+    strafe_align();
+    if(fromCenter) {
+      if(is_diag(color))
+        go_const(BACK, 5.5, 2000, true);
+      else
+        go_const(BACK, 6, 2000, true);
+    } else {
+      if(is_diag(color))
+        go_const(BACK, 7, 2000, false);
+      else
+        go_const(BACK, 6, 2000, false);
+    }
+    delay(200);
+    strafe_align();
+}
+void go_next_from_gray(Color from) {
+  go_const(BACK, 4, 1000, false);
+  drop();
+  go_const(FRONT, 4, 1000, false);
+  // avoid going home from yellow
+  if (from+1 == HOME) {
+      go(LEFT, 90, false);
+    go_pick(from+2, true);
+  } else {
+    go(LEFT, 135, false);
+    go_pick(from+1, true);
+  }
+}
+void go_pick(Color color, bool fromCenter) {
+  int spokes = 0;
+  for(int i = 0; i < 4; i++) {
+    // if first spoke make sure to get out of the box
+     if(spokes == 0) get_out_of_box(color);
+     // if there's no spoke to stop by for this branch
+    int nextSpoke = find_coin_pos(color, fromCenter);
+    if(nextSpoke == -1) {
+      go_const(BACK, 6, 1000, true);
+      go_pick_next(color, fromCenter, spokes);
+      return;
+    }
+    // otherwise go towards a spoke
+    if(fromCenter) {
+      go_until_spokes(FRONT, nextSpoke, true);
+      spokes = nextSpoke;
+    } else {
+      go_until_spokes(FRONT, 5 - nextSpoke - spokes, true); 
+      spokes = 5 - nextSpoke;
+    }
+    align_to_coin(color, fromCenter);
+    Color found = pick_up();
+    if(found != INVALID) {
+      matrix[color][nextSpoke - 1] = true;
+      if(fromCenter) {
+        go(FRONT, 10, false);
+        delay(500);
+        go(RIGHT, 180, false);
+      }
+      return_to_gray(color, nextSpoke);
+      // after it is at gray
+      if(found == GRAY) {
+         go_next_from_gray(color);
+        // if not gray
+      } else {
+        rotate(color, found); 
+        return_to_color(found); 
+      }
+      break;
+    } else {
+    // if coin not found
+    // write code to repeat chekcing...
+      matrix[color][nextSpoke - 1] = true;
+    }
+    drop();
+    go_const(FRONT, 6, 1000, true);
+  }
 }
