@@ -6,6 +6,8 @@ void init_matrix(){
       else {
         if((ROUND == 1) && ((j % 2) == 1))
           matrix[i][j] = true;
+        else if ((ROUND == 2) && ((j % 3) == 0))
+          matrix[i][j] = true;
         else
           matrix[i][j] = false;
       }
@@ -18,9 +20,9 @@ bool is_diag(int turn) {
    else
     return true;
 }
-Color find_next_color_coin(Color from) {
+Color find_next_branch(Color from) {
   for (int i = 1; i < 8; i++) {
-    if (i != HOME) {
+    if (i != WHITE && i != HOME) {
     for (int j = 0; j < 4; j++) {
         if(matrix[i][j] == false) {
           return i;
@@ -48,9 +50,11 @@ int find_coin_pos(Color col, bool forward) {
 }
 void rotate(Color from, Color to) {
    int diff = (to - from) * 45;
-    if (diff >= 180) diff = 180 - diff;
-    else if (diff <= -180) diff = abs(diff) - 180;
-    go(LEFT, diff, false);
+   if (diff < 0)
+      diff = abs(diff) - 180;
+    else
+      diff = 180 - diff;
+     go(LEFT, diff, false);
 }
 void return_to_color(Color to) {
   if(is_diag(to))
@@ -88,8 +92,8 @@ void go_pick_next(Color color, bool fromCenter, int spokes) {
   } else {
     return_to_gray(color, 5 - spokes);
   }
-  int dest = find_next_color_coin(color);
-  rotate(dest, color); 
+  int dest = find_next_branch(color);
+  rotate(color, dest); 
   go_pick(dest, fromCenter);
 }
 void align_to_coin(Color color, bool fromCenter) {
@@ -138,7 +142,7 @@ void go_pick(Color color, bool fromCenter) {
     }
     // otherwise go towards a spoke
     if(fromCenter) {
-      go_until_spokes(FRONT, nextSpoke, true);
+      go_until_spokes(FRONT, nextSpoke - spokes, true);
       spokes = nextSpoke;
     } else {
       go_until_spokes(FRONT, 5 - nextSpoke - spokes, true); 
@@ -166,6 +170,7 @@ void go_pick(Color color, bool fromCenter) {
     } else {
     // if coin not found
     // write code to repeat chekcing...
+    
       matrix[color][nextSpoke - 1] = true;
     }
     drop();

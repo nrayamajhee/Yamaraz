@@ -7,7 +7,7 @@ void run_servo(Direction dir) {
   int steps = 0;
   int pin = 0;
   if ((dir == RIGHT) || (dir == LEFT)) {
-    pin = 1;
+    pin = SERVO_PIN1;
     if (dir == RIGHT) {
       speed = 2400;
       steps = 150;
@@ -16,7 +16,7 @@ void run_servo(Direction dir) {
       steps = 150;
     }
   } else if ((dir == UP)  || (dir == DOWN)) {
-    pin = 2;
+    pin = SERVO_PIN2;
     if(dir == UP) {
       speed = 800;
       steps = 300;

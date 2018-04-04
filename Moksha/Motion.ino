@@ -14,7 +14,7 @@ Motors motors = {
   false,
   0,
   0,
-  600,  // to misec delay
+  500,  // to misec delay
   2000, // from misec delay
   0,
   1,     // turn ratio
@@ -118,7 +118,7 @@ void set_steps(Direction dir, float amount){
   if(amount < 0) {
     if(dir == RIGHT) dir = LEFT;
     else dir = RIGHT;
-    amount = 180 + amount;
+    amount = abs(amount);
   }
   set_direction(dir);
   if (dir == FRONT || dir == BACK){
