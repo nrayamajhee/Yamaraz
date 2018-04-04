@@ -33,12 +33,11 @@
  */
 #define NUM_SENSORS   8
 #define TIMEOUT       2500
-#define EMITTER_PIN   2
+#define EMITTER_PIN   3
 #define IR_THRESHHOLD 700
-#define LIGHT_PIN 30
-#define SERVO_PIN 10
-#define MAGNET_PIN 11
-#define TURN_SCALE 0.25;
+#define MAGNET_PIN    11
+#define TURN_SCALE    0.35
+#define ROUND         1
 /*
  * (from Wikipedia)
  *
@@ -77,25 +76,26 @@ struct RGB {
   long g;
   long b;
 };
-RGB colors[9] = {
-  {1100, 1700, 1630},
-  {1200, 800, 780},
-  {3130, 2740, 1630},
-  {5000, 5000, 5000},
-  {870, 1050, 1200},
-  {1340, 1540, 915},
-  {1460, 580, 480},
-  {950, 900, 720},
-  {697, 600, 450}
+RGB colors[8] = {
+  {41000, 65000, 65000}, //C
+  {45000, 31000, 39000}, //M
+  {65535, 65535, 65535}, //Y
+  {26000, 50000, 65000}, //B
+  {62000, 65000, 53000}, //G
+  {55000, 22000, 20000}, //R
+  {24000, 32000, 29000}, //G
+  {10000, 12000, 10000}  //IN
 };
 struct Debug {
   bool steps;
   bool ir;
+  bool angle;
   bool servo;
   bool light;
   bool motion;
 };
 Debug debug   = {
+  0,
   0,
   0,
   0,
@@ -116,7 +116,7 @@ Motors motors = {
   false,
   0,
   0,
-  800,  // to misec delay
+  600,  // to misec delay
   2000, // from misec delay
   0,
   1,     // turn ratio
@@ -125,42 +125,48 @@ Motors motors = {
 struct IR {
   unsigned int  sensorValues  [NUM_SENSORS];
   bool          filteredValues[NUM_SENSORS];
+  
 };
+
 IR ir;
-bool spokes[6][5];
+IR ir2;
+
+bool matrix[8][4];
+
 void initialize() {
   DDRL = 0xFF;                // set port L to output
-  pinMode(SERVO_PIN, OUTPUT);  // servo output
-  pinMode(LIGHT_PIN, OUTPUT);  // light
-  digitalWrite(LIGHT_PIN, LOW);  // turn off the eye straining LED
   Serial.begin(9600);
-  run_servo(UP);
+  init_servo();
+  init_light();
   init_timers();         // start the timers
   set_timers(ALL, motors.minSpeed);
-  for (int i =0; i < 6; i++) {
-    for (int j =0; j < 5; j++) {
-      spokes[i][j] = false;
+  for (int i = 0; i < 8; i++) {
+    for (int j = 0; j < 4; j++) {
+      if((ROUND == 1) && ((j % 2) == 1))
+        matrix[i][j] = true;
+      else
+        matrix[i][j] = false;
     }
   }
 }
-void begin_course() {
-//  go(BACK, 43, false);
-//  correct_right();
+void run_course() {
+  go(FRONT, 43, false);
+  correct_right();
   go_to(CYAN);
+}
+void run_periphery() {
+  for(int i = 0; i < 4; i++) {
+    go(BACK, 12, true);
+    delay(1000);
+    go(RIGHT, 90, false);
+  }
 }
 void setup() {
   initialize();
-//  digitalWrite(LIGHT_PIN, HIGH);
-//  begin_course();
-run_periphery();
-//go_to_gray(MAGENTA);
-//strafe_align();
-//go_to_gray(1);
-//go(BACK, 20, true);
+//  go(FRONT, 24, true);
+  run_course();
 }
 void loop() {
-//  pick_up();
-//  Serial.println(calculate_color());
-//  drop();
-//  Serial.println(IR_calculate_offset());
+//Serial.println(pick_up());
+//drop();
 }

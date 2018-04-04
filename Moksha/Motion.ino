@@ -1,12 +1,12 @@
 void set_direction(Direction dir) {
   if (dir == FRONT) {
-    PORTL = 0xA0;
-  } else if (dir == BACK) {
     PORTL = 0x0A;
+  } else if (dir == BACK) {
+    PORTL = 0xA0;
   } else if (dir == SLEFT) {
-    PORTL = 0x22;
-  } else if (dir == SRIGHT) {
     PORTL = 0x88;
+  } else if (dir == SRIGHT) {
+    PORTL = 0x22;
   } else if (dir == LEFT) {
     PORTL = 0x00;
   } else if (dir == RIGHT) {
@@ -99,7 +99,7 @@ void set_steps(Direction dir, float amount){
     motors.totalSteps = amount * 228; // strafing calibration
 
   } else {
-    motors.totalSteps = (int)ceil(amount * 24); // angular calibration
+    motors.totalSteps = (int)ceil(amount * 23.1); // angular calibration
   }
    if(debug.motion){
     Serial.print("Going ");
@@ -113,10 +113,13 @@ void set_steps(Direction dir, float amount){
     Serial.print(" acceleartion ");
   }
 }
-void update_motors(bool correct){
+void update_motors(bool correct, Direction dir){
   while(motors.running == true) {
     if(correct) {
-        motors.alignRatio = 1 + IR_calculate_offset() * TURN_SCALE;
+        if(dir == FRONT)
+          motors.alignRatio = 1 + IR_calculate_offset() * TURN_SCALE;
+        if(dir == BACK)
+          motors.alignRatio = 1 + IR_calculate_offset_back() * TURN_SCALE;
     }
   }
 }
@@ -126,19 +129,20 @@ void go(Direction dir, float amount, bool correct) {
   motors.accelerate = true;
   motors.speed = motors.minSpeed;
   motors.running = true;
-  update_motors(correct);
+  update_motors(correct, dir);
 }
 void go_const(Direction dir, float amount, int speed, bool correct) {
   set_steps(dir, amount);
   motors.accelerate = false;
   motors.speed = speed;
   motors.running = true;
-  update_motors(correct);
+  update_motors(correct, dir);
 }
 void go_until_spokes(Direction dir, bool correct, int steps) {
   set_direction(dir);
   // will only run a maximum of 2000 steps as a safety precaus
-  motors.totalSteps = 2000;
+  motors.totalSteps = 5000;
+  motors.steps = 0;
   motors.accelerate = true;
   motors.speed = motors.minSpeed;
   motors.running = true;
@@ -149,6 +153,8 @@ void go_until_spokes(Direction dir, bool correct, int steps) {
       if(!countLock) {
         counter++;
         countLock = true;
+        motors.totalSteps = 5000;
+        motors.steps = 0;
       }
       // deaccelerate for 3 in * 216 steps
       if(counter >= steps){
@@ -157,7 +163,6 @@ void go_until_spokes(Direction dir, bool correct, int steps) {
         motors.steps = 2592;  
       }
     } else {
-      // once out of the zone, unlock
       countLock = false;
     }
     if(correct) {
@@ -169,11 +174,10 @@ void strafe_align(){
   int average = 0;
   do {
     average = IR_calculate_offset();
-    Serial.println(average);
     if(average > 0){
-      go_const(SLEFT, 0.1, 5000, false);
-    } else if(average < 0){
       go_const(SRIGHT, 0.1, 5000, false);
+    } else if(average < 0){
+      go_const(SLEFT, 0.1, 5000, false);
     }
   } while(average != 0);
 }
@@ -194,7 +198,32 @@ void correct_front() {
     IR_filter();
     if(!ir.filteredValues[3] || !ir.filteredValues[4])
       count++;
-    go_const(BACK, 0.1, 2000, false);
+    go_const(FRONT, 0.1, 2000, false);
   }
-  go_const(FRONT, 3, 2000, false);
+  go_const(BACK, 3, 2000, false);
 }
+
+void correct_angle() {
+  float sum = 0;
+  float front = 0;
+  float back = 0;
+  do {
+    front = IR_calculate_offset();
+    back = IR_calculate_offset_back();
+    sum = front - back;
+    if(debug.angle) {
+      Serial.print(front);
+      Serial.print("\t");
+      Serial.print(back);
+      Serial.print("\t");
+      Serial.print(" = ");
+      Serial.println(sum);  
+    }
+    if (sum < 0) {
+      go_const(LEFT, 1, 2000, false);
+    } else if (sum > 0) {
+      go_const(RIGHT, 1, 2000, false);
+    }
+  } while (sum !=0);
+}
+
