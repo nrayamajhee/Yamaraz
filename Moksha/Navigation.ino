@@ -1,4 +1,4 @@
-#define ROUND  1
+#define ROUND  3
 
 bool matrix[8][4];
 void init_matrix(){
@@ -15,7 +15,6 @@ void init_matrix(){
       }
     }
   }
-  matrix[RED][0] = false;
 }
 bool is_diag(int turn) {
   if(turn == 2 || turn == 6)
@@ -114,6 +113,8 @@ void get_out_of_box(Color color) {
       go_const(FRONT, 8, 1000, true);
     else
       go_const(FRONT, 3, 1000, true);
+      strafe_align();
+  
 }
 void go_pick_next(Color color, bool fromCenter, int spokes) {
   if(fromCenter) {
@@ -175,6 +176,29 @@ void align_to_coin(Color color, bool fromCenter) {
     delay(200);
     strafe_align();
 }
+void align_to_coin_const(Color color, bool fromCenter) {
+    delay(200);
+    correct_angle();
+    delay(200);
+    strafe_align();
+    if(fromCenter) {
+      if(is_diag(color))
+//        go_const(BACK, 5.5, 2000, true);
+                go_const(BACK, 1, 2000, true);
+      else
+//        go_const(BACK, 6, 2000, true);
+                go_const(BACK, 2.25, 2000, true);
+    } else {
+      if(is_diag(color))
+//        go_const(BACK, 7, 2000, false);
+        go_const(BACK, 3.25, 2000, false);
+      else
+//        go_const(BACK, 6, 2000, false);
+        go_const(BACK, 2.25, 2000, false);
+    }
+    delay(200);
+    strafe_align();
+}
 void go_next_from_gray(Color from) {
   go_const(BACK, 4, 1000, false);
   drop();
@@ -219,9 +243,10 @@ void go_pick(Color color, bool fromCenter) {
     if (found == INVALID) {
     // if coin not found
     // write code to repeat chekcing...
+      drop();
       go_const(BACK, 2, 2000, true);
-      go_until_spokes(FRONT, 1, true);
-      align_to_coin(color, fromCenter);
+      go_until_spokes(FRONT, 1, 2000, true);
+      align_to_coin_const(color, fromCenter);
       Color found = pick_up();
     }
     matrix[color][nextSpoke - 1] = true;

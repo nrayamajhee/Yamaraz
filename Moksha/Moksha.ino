@@ -105,6 +105,7 @@ void run_periphery() {
 }
 void setup() {
   initialize();
+//  go_pick(YELLOW, false);
   run_course();
 //go_until_spokes(FRONT, 1, true);
 }

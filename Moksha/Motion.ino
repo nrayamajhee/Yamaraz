@@ -209,6 +209,36 @@ void go_until_spokes(Direction dir, int steps, bool correct) {
     }
   }
 }
+void go_until_spokes(Direction dir, int steps, int speed, bool correct) {
+  set_direction(dir);
+  // will only run a maximum of 5000 steps as a safety precaus
+  motors.totalSteps = 5000;
+  motors.steps = 0;
+  motors.accelerate = false;
+  motors.speed = speed;
+  motors.running = true;
+  int counter = 0;
+  bool countLock = false;
+  while (motors.running == true) {
+    if (IR_detect_spokes()) {
+      if (!countLock) {
+        counter++;
+        countLock = true;
+        motors.totalSteps = 5000;
+        motors.steps = 0;
+      }
+      // deaccelerate for 3 in * 216 steps
+      if (counter >= steps) {
+        motors.steps = 5000;
+      }
+    } else {
+      countLock = false;
+    }
+    if (correct) {
+      motors.alignRatio = 1 + IR_calculate_offset() * TURN_SCALE;
+    }
+  }
+}
 void strafe_align() {
   int average = 0;
   do {
