@@ -14,7 +14,7 @@ Motors motors = {
   false,
   0,
   0,
-  500,  // to misec delay
+  600,  // to misec delay
   2000, // from misec delay
   0,
   1,     // turn ratio
@@ -73,10 +73,10 @@ ISR(TIMER3_COMPA_vect) {
   if (motors.running) {
     // this will change the speeds of both wheels because we
     // mutate the global volatile variable motors.speed
-    if(motors.accelerate) {
+    if (motors.accelerate) {
       if (motors.steps <= (int)(0.2 * motors.totalSteps) && (motors.speed > motors.maxSpeed)) {
         motors.speed -= ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
-  
+
       } else if (motors.steps >= (int)(0.8 * motors.totalSteps) && (motors.speed < motors.minSpeed)) {
         motors.speed += ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
       }
@@ -88,7 +88,7 @@ ISR(TIMER3_COMPA_vect) {
     // This interrupt is also incharge of updating the step count
     motors.steps++;
     // If no more steps to go, stop!
-    if(motors.steps >= motors.totalSteps) {
+    if (motors.steps >= motors.totalSteps) {
       motors.running = false;
       motors.steps = 0;
       motors.totalSteps = 0;
@@ -96,15 +96,15 @@ ISR(TIMER3_COMPA_vect) {
   }
 }
 /*
- * ISR for timer 4 RIGHT MOTORS
- * responsible for serial printing info
- */
+   ISR for timer 4 RIGHT MOTORS
+   responsible for serial printing info
+*/
 ISR(TIMER4_COMPA_vect) {
   if (motors.running) {
-    set_timers(RIGHT, motors.alignRatio * motors.speed); 
+    set_timers(RIGHT, motors.alignRatio * motors.speed);
     PORTL ^= 0x50;
   }
-  if(debug.steps) {
+  if (debug.steps) {
     Serial.print(" | ");
     Serial.print(motors.totalSteps);
     Serial.print(" # ");
@@ -113,24 +113,24 @@ ISR(TIMER4_COMPA_vect) {
     Serial.println(motors.speed);
   }
 }
-void set_steps(Direction dir, float amount){
+void set_steps(Direction dir, float amount) {
   // if negative angles
-  if(amount < 0) {
-    if(dir == RIGHT) dir = LEFT;
+  if (amount < 0) {
+    if (dir == RIGHT) dir = LEFT;
     else dir = RIGHT;
     amount = abs(amount);
   }
   set_direction(dir);
-  if (dir == FRONT || dir == BACK){
+  if (dir == FRONT || dir == BACK) {
     motors.totalSteps = amount * 216; // linear calibration
-    
-  } else if(dir == SLEFT || dir == SRIGHT){
+
+  } else if (dir == SLEFT || dir == SRIGHT) {
     motors.totalSteps = amount * 228; // strafing calibration
 
   } else {
     motors.totalSteps = (int)ceil(amount * 23.1); // angular calibration
   }
-   if(debug.motion){
+  if (debug.motion) {
     Serial.print("Going ");
     Serial.print(dir);
     Serial.print(" by ");
@@ -142,13 +142,13 @@ void set_steps(Direction dir, float amount){
     Serial.print(" acceleartion ");
   }
 }
-void update_motors(bool correct, Direction dir){
-  while(motors.running == true) {
-    if(correct) {
-        if(dir == FRONT)
-          motors.alignRatio = 1 + IR_calculate_offset() * TURN_SCALE;
-        if(dir == BACK)
-          motors.alignRatio = 1 + IR_calculate_offset_back() * TURN_SCALE;
+void update_motors(bool correct, Direction dir) {
+  while (motors.running == true) {
+    if (correct) {
+      if (dir == FRONT)
+        motors.alignRatio = 1 + IR_calculate_offset() * TURN_SCALE;
+      if (dir == BACK)
+        motors.alignRatio = 1 + IR_calculate_offset_back() * TURN_SCALE;
     }
   }
 }
@@ -159,6 +159,16 @@ void go(Direction dir, float amount, bool correct) {
   motors.speed = motors.minSpeed;
   motors.running = true;
   update_motors(correct, dir);
+}
+void go(Direction dir, float amount, int speed, bool correct) {
+  set_steps(dir, amount);
+  // set slow speed and start the motors
+  motors.accelerate = true;
+  motors.speed = motors.minSpeed;
+  motors.maxSpeed = speed;
+  motors.running = true;
+  update_motors(correct, dir);
+  motors.maxSpeed = 600;
 }
 void go_const(Direction dir, float amount, int speed, bool correct) {
   set_steps(dir, amount);
@@ -177,44 +187,44 @@ void go_until_spokes(Direction dir, int steps, bool correct) {
   motors.running = true;
   int counter = 0;
   bool countLock = false;
-  while(motors.running == true) {
+  while (motors.running == true) {
     if (IR_detect_spokes()) {
-      if(!countLock) {
+      if (!countLock) {
         counter++;
         countLock = true;
         motors.totalSteps = 5000;
         motors.steps = 0;
       }
       // deaccelerate for 3 in * 216 steps
-      if(counter >= steps){
+      if (counter >= steps) {
         motors.speed = motors.maxSpeed;
         motors.totalSteps = 3240;
-        motors.steps = 2592;  
+        motors.steps = 2592;
       }
     } else {
       countLock = false;
     }
-    if(correct) {
+    if (correct) {
       motors.alignRatio = 1 + IR_calculate_offset() * TURN_SCALE;
     }
   }
 }
-void strafe_align(){
+void strafe_align() {
   int average = 0;
   do {
     average = IR_calculate_offset();
-    if(average > 0){
+    if (average > 0) {
       go_const(SRIGHT, 0.1, 5000, false);
-    } else if(average < 0){
+    } else if (average < 0) {
       go_const(SLEFT, 0.1, 5000, false);
     }
-  } while(average != 0);
+  } while (average != 0);
 }
 void correct_right() {
   int count = 0;
-  while(count < 5) {
+  while (count < 5) {
     IR_filter();
-    if(!ir.filteredValues[7])
+    if (!ir.filteredValues[7])
       count++;
     go_const(SLEFT, 0.1, 2000, false);
   }
@@ -223,9 +233,9 @@ void correct_right() {
 
 void correct_front() {
   int count = 0;
-  while(count < 5) {
+  while (count < 5) {
     IR_filter();
-    if(!ir.filteredValues[3] || !ir.filteredValues[4])
+    if (!ir.filteredValues[3] || !ir.filteredValues[4])
       count++;
     go_const(FRONT, 0.1, 2000, false);
   }
@@ -240,19 +250,19 @@ void correct_angle() {
     front = IR_calculate_offset();
     back = IR_calculate_offset_back();
     sum = front - back;
-    if(debug.angle) {
+    if (debug.angle) {
       Serial.print(front);
       Serial.print("\t");
       Serial.print(back);
       Serial.print("\t");
       Serial.print(" = ");
-      Serial.println(sum);  
+      Serial.println(sum);
     }
     if (sum < 0) {
       go_const(LEFT, 1, 2000, false);
     } else if (sum > 0) {
       go_const(RIGHT, 1, 2000, false);
     }
-  } while (sum !=0);
+  } while (sum != 0);
 }
 

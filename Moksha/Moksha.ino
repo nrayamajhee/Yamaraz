@@ -32,7 +32,6 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #define NUM_SENSORS   8
-#define ROUND         1
 /*
  * (from Wikipedia)
  *
@@ -73,8 +72,10 @@ struct Debug {
   bool servo;
   bool light;
   bool motion;
+  bool nav;
 };
 Debug debug   = {
+  0,
   0,
   0,
   0,
@@ -91,10 +92,9 @@ void initialize() {
   init_matrix();
 }
 void run_course() {
-  go(FRONT, 43, false);
+  go(FRONT, 43, 300, false);
   go(RIGHT, 45, false);
   go_pick(CYAN, true);
-  go(FRONT, 43, false);
 }
 void run_periphery() {
   for(int i = 0; i < 4; i++) {
@@ -106,7 +106,9 @@ void run_periphery() {
 void setup() {
   initialize();
   run_course();
+//go_until_spokes(FRONT, 1, true);
 }
 void loop() {
   // testing
+  
 }
