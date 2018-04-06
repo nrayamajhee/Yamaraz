@@ -14,7 +14,7 @@ Motors motors = {
   false,
   0,
   0,
-  600,  // to misec delay
+  500,  // to misec delay
   2000, // from misec delay
   0,
   1,     // turn ratio
@@ -168,7 +168,7 @@ void go(Direction dir, float amount, int speed, bool correct) {
   motors.maxSpeed = speed;
   motors.running = true;
   update_motors(correct, dir);
-  motors.maxSpeed = 600;
+  motors.maxSpeed = 500;
 }
 void go_const(Direction dir, float amount, int speed, bool correct) {
   set_steps(dir, amount);

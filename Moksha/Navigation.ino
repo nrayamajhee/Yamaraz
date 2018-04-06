@@ -1,4 +1,4 @@
-#define ROUND  3
+#define ROUND  1
 
 bool matrix[8][4];
 void init_matrix(){
@@ -73,13 +73,9 @@ void return_to_color(Color to) {
   Serial.print (to);  
   }
   if(is_diag(to))
-    go(FRONT, 44, 400, true);
+    go(FRONT, 54, 300, true);
   else
-    go(FRONT, 30,  400, true);
-  if(is_diag(to))
-    go(FRONT, 10, false);
-  else
-    go(FRONT, 7, false);
+    go(FRONT, 38,  300, true);
   drop(); 
   delay(500);
   go(RIGHT, 180, false);
@@ -99,26 +95,40 @@ void return_to_gray(Color from, int steps) {
     steps++;
   }
   go_until_spokes(FRONT, true, 1);
-  if(is_diag(from))
-    go(FRONT, steps * 8.5, true);
-  else
-    go(FRONT, steps * 6, true);
-  go(FRONT, 7, false);
+  if(steps > 1) {
+    if(is_diag(from))
+      go(FRONT, steps * 8.5, 300, true);
+    else
+      go(FRONT, steps * 6, 300, true);
+  } else {
+    if(is_diag(from))
+      go(FRONT, steps * 8.5, true);
+    else
+      go(FRONT, steps * 6, true);
+  }
+  go_const(FRONT, 7, 1000, false);
 
 if(debug.nav)
   Serial.println ("Now in Gray");
 }
-void get_out_of_box(Color color) {
-  if(is_diag(color))
+void get_out_of_box(Color color, bool fromCenter) {
+  if(!fromCenter) {
+    if(is_diag(color))
       go_const(FRONT, 8, 1000, true);
     else
       go_const(FRONT, 3, 1000, true);
-      strafe_align();
+  } else {
+     if(is_diag(color))
+      go_const(FRONT, 8, 1000, true);
+    else
+      go_const(FRONT, 5, 1000, true);
+  }
+    strafe_align();
   
 }
 void go_pick_next(Color color, bool fromCenter, int spokes) {
   if(fromCenter) {
-    go(FRONT, 10, false);
+    go(FRONT, 7, false);
     go(RIGHT, 180, false);
     if(debug.nav){
     Serial.println ( "   " );
@@ -137,7 +147,7 @@ void go_pick_next(Color color, bool fromCenter, int spokes) {
     Serial.print ("by  ");
     Serial.print(5- spokes);  
     }
-    return_to_gray(color, 5 - spokes);
+    return_to_gray(color, 4 - spokes);
   }
   if(debug.nav) {
     Serial.println (" ");
@@ -150,8 +160,7 @@ void go_pick_next(Color color, bool fromCenter, int spokes) {
     correct_front();
     go(FRONT, 43, 300, false);
     exit(0);
-  }
-  else go_pick(dest, true);
+  } else go_pick(dest, true);
 }
 void align_to_coin(Color color, bool fromCenter) {
     delay(200);
@@ -183,17 +192,13 @@ void align_to_coin_const(Color color, bool fromCenter) {
     strafe_align();
     if(fromCenter) {
       if(is_diag(color))
-//        go_const(BACK, 5.5, 2000, true);
-                go_const(BACK, 1, 2000, true);
+        go_const(BACK, 1, 2000, true);
       else
-//        go_const(BACK, 6, 2000, true);
-                go_const(BACK, 2.25, 2000, true);
+        go_const(BACK, 2.25, 2000, true);
     } else {
       if(is_diag(color))
-//        go_const(BACK, 7, 2000, false);
         go_const(BACK, 3.25, 2000, false);
       else
-//        go_const(BACK, 6, 2000, false);
         go_const(BACK, 2.25, 2000, false);
     }
     delay(200);
@@ -213,21 +218,17 @@ void go_pick(Color color, bool fromCenter) {
   Serial.print("Going ");
   Serial.println(color);  
   }
-  
   int spokes = 0;
   for(int i = 0; i < 4; i++) {
-    // if first spoke make sure to get out of the box
-     if(spokes == 0) get_out_of_box(color);
-     // if there's no spoke to stop by for this branch
-    int nextSpoke = find_coin_pos(color, fromCenter);
+     if(spokes == 0) get_out_of_box(color, fromCenter);
+     int nextSpoke = find_coin_pos(color, fromCenter);
     if(debug.nav) {
-    Serial.print(" for ");
-    Serial.println(nextSpoke);  
+      Serial.print(" for ");
+      Serial.println(nextSpoke);  
     }    
     if(nextSpoke == -1) {
 //      Serial.println("Exhausted this color");
-      if(fromCenter) go_pick_next(color, fromCenter, spokes);
-      else go_pick_next(color, fromCenter, spokes + 1);
+      go_pick_next(color, fromCenter, spokes);
       return;
     }
     // otherwise go towards a spoke
@@ -243,22 +244,22 @@ void go_pick(Color color, bool fromCenter) {
     if (found == INVALID) {
     // if coin not found
     // write code to repeat chekcing...
-      drop();
+//      drop();
       go_const(BACK, 2, 2000, true);
       go_until_spokes(FRONT, 1, 2000, true);
       align_to_coin_const(color, fromCenter);
-      Color found = pick_up();
+      found = pick_up();
     }
     matrix[color][nextSpoke - 1] = true;
     if(found != INVALID) {
       if(fromCenter) {
-        go(FRONT, 10, false);
+        go(FRONT, 11, false);
         delay(500);
         go(RIGHT, 180, false);
       }
       return_to_gray(color, nextSpoke);
       // after it is at gray
-      if(found == GRAY) {
+      if(found == GRAY || found == INVALID) {
          go_next_from_gray(color);
         // if not gray
       } else {
