@@ -83,18 +83,22 @@ Debug debug   = {
   0,
   0
 };
+unsigned long start_time;
 void initialize() {
   DDRL = 0xFF;                // set port L to output
   Serial.begin(9600);
+  pinMode(15, OUTPUT);
+  digitalWrite(15, HIGH);
   init_servo();
   init_light();
   init_timers(); 
   init_matrix();
 }
 void run_course() {
+  start_time = millis();
   go(FRONT, 43, 300, false);
-  go(RIGHT, 45, false);
-  go_pick(CYAN, true);
+  go(RIGHT, 90, false);
+  go_pick(MAGENTA, true);
 }
 void run_periphery() {
   for(int i = 0; i < 4; i++) {

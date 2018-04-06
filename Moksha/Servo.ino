@@ -55,6 +55,11 @@ Color pick_up() {
 }
 
 void drop() {
+  digitalWrite(MAGNET_PIN, HIGH);
+  pinMode(MAGNET_PIN, INPUT);  // magenet output
+  delay(200);
+}
+void drop_gracefully() {
   run_servo(DOWN);
   digitalWrite(MAGNET_PIN, HIGH);
   pinMode(MAGNET_PIN, INPUT);  // magenet output

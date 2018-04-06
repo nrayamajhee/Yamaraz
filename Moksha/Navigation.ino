@@ -1,4 +1,4 @@
-#define ROUND  1
+#define ROUND  3
 
 bool matrix[8][4];
 void init_matrix(){
@@ -36,13 +36,13 @@ Color find_next_branch(Color from) {
 }
 int find_coin_pos(Color col, bool forward) {
   if(forward) {
-    for(int j = 0; j < 4; j++) {
+    for(int j = 3; j >= 0; j--) {
       if(matrix[col][j] == false) {
         return j + 1;
       }
     }
   } else {
-    for(int j = 3; j >= 0; j--) {
+    for(int j = 0; j < 4; j++) {
       if(matrix[col][j] == false) {
         return j + 1;
       }
@@ -73,9 +73,13 @@ void return_to_color(Color to) {
   Serial.print (to);  
   }
   if(is_diag(to))
-    go(FRONT, 54, 300, true);
+    go(FRONT, 44, 400, true);
   else
-    go(FRONT, 38,  300, true);
+    go(FRONT, 30,  400, true);
+  if(is_diag(to))
+    go(FRONT, 10, false);
+  else
+    go(FRONT, 8,  false);
   drop(); 
   delay(500);
   go(RIGHT, 180, false);
@@ -97,31 +101,42 @@ void return_to_gray(Color from, int steps) {
   go_until_spokes(FRONT, true, 1);
   if(steps > 1) {
     if(is_diag(from))
-      go(FRONT, steps * 8.5, 300, true);
+      go(FRONT, steps * 8.5, 400, true);
     else
-      go(FRONT, steps * 6, 300, true);
+      go(FRONT, steps * 6, 400, true);
   } else {
     if(is_diag(from))
       go(FRONT, steps * 8.5, true);
     else
       go(FRONT, steps * 6, true);
   }
-  go_const(FRONT, 7, 1000, false);
+  if(is_diag(from))
+      go_const(FRONT, 7, 1000, true);
+    else
+      go_const(FRONT, 5.5, 1000, true);
 
 if(debug.nav)
   Serial.println ("Now in Gray");
 }
+void go_next_from_gray(Color from) {
+  go_const(BACK, 3, 1000, false);
+  drop();
+  go_const(FRONT, 3, 1000, false);
+  int dest = find_next_branch(from);
+  rotate(from, dest); 
+  go_pick(dest, true);
+}
 void get_out_of_box(Color color, bool fromCenter) {
   if(!fromCenter) {
     if(is_diag(color))
-      go_const(FRONT, 8, 1000, true);
+      go_const(FRONT, 5, 1000, true);
     else
       go_const(FRONT, 3, 1000, true);
   } else {
      if(is_diag(color))
-      go_const(FRONT, 8, 1000, true);
+      go_const(FRONT, 8, 1000, false);
     else
-      go_const(FRONT, 5, 1000, true);
+      go_const(FRONT, 5, 1000, false);
   }
     strafe_align();
   
@@ -176,10 +191,10 @@ void align_to_coin(Color color, bool fromCenter) {
 //                go_const(BACK, 2.25, 2000, true);
     } else {
       if(is_diag(color))
-        go_const(BACK, 7, 2000, false);
+        go_const(BACK, 7, 2000, true);
 //        go_const(BACK, 3.25, 2000, false);
       else
-        go_const(BACK, 6, 2000, false);
+        go_const(BACK, 6, 2000, true);
 //        go_const(BACK, 2.25, 2000, false);
     }
     delay(200);
@@ -204,15 +219,22 @@ void align_to_coin_const(Color color, bool fromCenter) {
     delay(200);
     strafe_align();
 }
-void go_next_from_gray(Color from) {
-  go_const(BACK, 4, 1000, false);
-  drop();
-  go_const(FRONT, 4, 1000, false);
-  int dest = find_next_branch(from);
-  rotate(from, dest); 
-  go_pick(dest, true);
-}
 void go_pick(Color color, bool fromCenter) {
+  int time_frame;
+  if(ROUND == 1) time_frame = 270000;
+  else if(ROUND == 2) time_frame = 330000;
+  else if(ROUND == 3) time_frame = 450000;
+  if((millis() - start_time) >= time_frame) {
+    if(!fromCenter) { 
+      get_out_of_box(color, fromCenter);
+      return_to_gray(color, 4);
+    }
+    rotate(color, HOME); 
+    correct_front();
+    go(FRONT, 41, 300, false);
+    correct_right();
+    exit(0);
+  }
   if(debug.nav) {
   Serial.println ("   ");
   Serial.print("Going ");
@@ -244,12 +266,13 @@ void go_pick(Color color, bool fromCenter) {
     if (found == INVALID) {
     // if coin not found
     // write code to repeat chekcing...
-//      drop();
+      drop_gracefully();
       go_const(BACK, 2, 2000, true);
       go_until_spokes(FRONT, 1, 2000, true);
       align_to_coin_const(color, fromCenter);
       found = pick_up();
     }
+    if (found == INVALID) found = GRAY;
     matrix[color][nextSpoke - 1] = true;
     if(found != INVALID) {
       if(fromCenter) {
@@ -268,8 +291,8 @@ void go_pick(Color color, bool fromCenter) {
       }
       break;
     } 
-    drop();
-    go_const(FRONT, 6, 1000, true);
+      drop_gracefully();
+      go_const(FRONT, 6, 1000, true);
   }
   go_pick_next(color, fromCenter,  spokes );
 }

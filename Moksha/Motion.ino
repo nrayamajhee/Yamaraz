@@ -254,11 +254,11 @@ void correct_right() {
   int count = 0;
   while (count < 5) {
     IR_filter();
-    if (!ir.filteredValues[7])
+    if (ir.filteredValues[7] || ir.filteredValues[6] || ir.filteredValues[5])
       count++;
     go_const(SLEFT, 0.1, 2000, false);
   }
-  go_const(SRIGHT, 5, 2000, false);
+  go_const(SRIGHT, 5, 800, false);
 }
 
 void correct_front() {
