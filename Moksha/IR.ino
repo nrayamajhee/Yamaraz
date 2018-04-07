@@ -102,7 +102,7 @@ float IR_calculate_offset_back() {
 }
 bool IR_detect_spokes() {
   IR_filter();
-  if((ir.filteredValues[0] || ir.filteredValues[1]) &&  (ir.filteredValues[6] || ir.filteredValues[7])) {
+  if((ir.filteredValues[0] || ir.filteredValues[1] || ir.filteredValues[2]) &&  (ir.filteredValues[5] || ir.filteredValues[6] || ir.filteredValues[7])) {
     return true;
   }
   return false;

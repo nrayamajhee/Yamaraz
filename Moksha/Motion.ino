@@ -227,10 +227,6 @@ void go_until_spokes(Direction dir, int steps, int speed, bool correct) {
         motors.totalSteps = 5000;
         motors.steps = 0;
       }
-      if(counter > 3) {
-        countLock = true;
-        counter -= 2;
-      }
       // deaccelerate for 3 in * 216 steps
       if (counter >= steps) {
         motors.steps = 5000;

@@ -106,6 +106,7 @@ void return_to_color(Color to) {
   drop(); 
   delay(500);
   go(RIGHT, 180, false);
+  strafe_align();
   go_pick(to, false);
 }
 void go_next_from_gray(Color from) {
@@ -242,13 +243,13 @@ void go_pick(Color color, bool fromCenter) {
     }
     // otherwise go towards a spoke
     if(fromCenter) {
-      go_until_spokes(FRONT, nextSpoke - spokes, true);
+      go_until_spokes(FRONT, nextSpoke - spokes, LOW_SPD, true);
       spokes = nextSpoke;
     } else {
-      go_until_spokes(FRONT, 5 - nextSpoke - spokes, true); 
+      go_until_spokes(FRONT, 5 - nextSpoke - spokes, LOW_SPD, true); 
       spokes = 5 - nextSpoke;
     }
-    align_to_coin(color, fromCenter);
+    align_to_coin_const(color, fromCenter);
     Color found = pick_up_validate();
     if (found == INVALID) {
     // if coin not found
