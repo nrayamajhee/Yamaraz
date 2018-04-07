@@ -43,8 +43,8 @@
  * Path to Moksha -  Vivekachudamani, 8th Century AD
  */
  
-#define HIGH_SPD 300
-#define LOW_SPD 400
+#define HIGH_SPD 400
+#define LOW_SPD 500
 enum Direction {
   FRONT,
   BACK,
@@ -113,11 +113,11 @@ void setup() {
   initialize();
   start_time = millis();
   run_course();
-//go_until_spokes(FRONT, 4, LOW_SPD, true);
-//return_to_gray(GREEN, 4);
-//run_periphery();
+  
+//  go(RIGHT, 360, false);
+//go_until_spokes(FRONT, 1, true);
+//align_to_coin(YELLOW, false);
+//pick_up();
 }
 void loop() {
-  // testing'
-//  correct_angle();
 }

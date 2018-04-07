@@ -74,11 +74,11 @@ ISR(TIMER3_COMPA_vect) {
     // this will change the speeds of both wheels because we
     // mutate the global volatile variable motors.speed
     if (motors.accelerate) {
-      if (motors.steps <= (int)(0.2 * motors.totalSteps) && (motors.speed > motors.maxSpeed)) {
-        motors.speed -= ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
+      if (motors.steps <= (int)(0.3 * motors.totalSteps) && (motors.speed > motors.maxSpeed)) {
+        motors.speed -= ceil((motors.minSpeed - motors.maxSpeed) / (0.3 * motors.totalSteps));
 
-      } else if (motors.steps >= (int)(0.8 * motors.totalSteps) && (motors.speed < motors.minSpeed)) {
-        motors.speed += ceil((motors.minSpeed - motors.maxSpeed) / (0.2 * motors.totalSteps));
+      } else if (motors.steps >= (int)(0.7 * motors.totalSteps) && (motors.speed < motors.minSpeed)) {
+        motors.speed += ceil((motors.minSpeed - motors.maxSpeed) / (0.3 * motors.totalSteps));
       }
     }
     // Toggle the left motors
@@ -168,7 +168,7 @@ void go(Direction dir, float amount, int speed, bool correct) {
   motors.maxSpeed = speed;
   motors.running = true;
   update_motors(correct, dir);
-  motors.maxSpeed = 500;
+  motors.maxSpeed = LOW_SPD;
 }
 void go_const(Direction dir, float amount, int speed, bool correct) {
   set_steps(dir, amount);
@@ -187,10 +187,12 @@ void go_until_spokes(Direction dir, int steps, bool correct) {
   motors.running = true;
   int counter = 0;
   bool countLock = false;
+  int s = 0;
   while (motors.running == true) {
     if (IR_detect_spokes()) {
       if (!countLock) {
         counter++;
+        s = motors.steps;
         countLock = true;
         motors.totalSteps = 5000;
         motors.steps = 0;
@@ -201,7 +203,7 @@ void go_until_spokes(Direction dir, int steps, bool correct) {
         motors.totalSteps = 3240;
         motors.steps = 2592;
       }
-    } else {
+    } else if (motors.steps > 300) {
       countLock = false;
     }
     if (correct) {

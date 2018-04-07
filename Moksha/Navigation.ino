@@ -77,7 +77,7 @@ void return_to_gray(Color from, int steps) {
     go_const(BACK, 6, 1000, false);
     steps++;
   }
-  go_until_spokes(FRONT, true, 1);
+  go_until_spokes(FRONT, true, 1000, 1);
   int spd = LOW_SPD;
   if(steps > 1)  spd = HIGH_SPD;
   if(is_diag(from))
@@ -85,9 +85,9 @@ void return_to_gray(Color from, int steps) {
   else
     go(FRONT, steps * 6, spd, true);
   if(is_diag(from))
-      go_const(FRONT, 7, 1000, false);
+      go_const(FRONT, 10, 1000, false);
     else
-      go_const(FRONT, 5.5, 1000, false);
+      go_const(FRONT, 8, 1000, false);
   }
 
 void return_to_color(Color to) {
@@ -106,7 +106,7 @@ void return_to_color(Color to) {
   drop(); 
   delay(500);
   go(RIGHT, 180, false);
-  strafe_align();
+  delay(500);
   go_pick(to, false);
 }
 void go_next_from_gray(Color from) {
@@ -177,7 +177,7 @@ void align_to_coin(Color color, bool fromCenter) {
         go_const(BACK, 6, 2000, true);
     } else {
       if(is_diag(color))
-        go_const(BACK, 7, 2000, true);
+        go_const(BACK, 6.5, 2000, true);
       else
         go_const(BACK, 6, 2000, true);
     }
@@ -191,12 +191,12 @@ void align_to_coin_const(Color color, bool fromCenter) {
     strafe_align();
     if(fromCenter) {
       if(is_diag(color))
-        go_const(BACK, 1, 2000, true);
+        go_const(BACK, 1.5, 2000, true);
       else
         go_const(BACK, 2.25, 2000, true);
     } else {
       if(is_diag(color))
-        go_const(BACK, 3.25, 2000, false);
+        go_const(BACK, 2.75, 2000, false);
       else
         go_const(BACK, 2.25, 2000, false);
     }
@@ -209,9 +209,6 @@ void go_pick(Color color, bool fromCenter) {
   if(ROUND == 1) time_frame = 270000;
   else if(ROUND == 2) time_frame = 330000;
   else if(ROUND == 3) time_frame = 450000;
-//  Serial.println(millis());
-//  Serial.println(time_frame);
-//  Serial.println(start_time);
   if((millis() - start_time) >= time_frame) {
     if(!fromCenter) { 
       get_out_of_box(color, fromCenter);
@@ -243,13 +240,13 @@ void go_pick(Color color, bool fromCenter) {
     }
     // otherwise go towards a spoke
     if(fromCenter) {
-      go_until_spokes(FRONT, nextSpoke - spokes, LOW_SPD, true);
+      go_until_spokes(FRONT, nextSpoke - spokes, true);
       spokes = nextSpoke;
     } else {
-      go_until_spokes(FRONT, 5 - nextSpoke - spokes, LOW_SPD, true); 
+      go_until_spokes(FRONT, 5 - nextSpoke - spokes, true); 
       spokes = 5 - nextSpoke;
     }
-    align_to_coin_const(color, fromCenter);
+    align_to_coin(color, fromCenter);
     Color found = pick_up_validate();
     if (found == INVALID) {
     // if coin not found
@@ -264,7 +261,7 @@ void go_pick(Color color, bool fromCenter) {
     matrix[color][nextSpoke - 1] = true;
     if(found != INVALID) {
       if(fromCenter) {
-        go(FRONT, 11, false);
+        go(FRONT, 11, 1000, false);
         delay(500);
         go(RIGHT, 180, false);
       }
