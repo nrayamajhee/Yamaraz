@@ -2,8 +2,7 @@
 #define TIMEOUT       2500
 #define EMITTER_PIN   3
 #define IR_THRESHHOLD 700
-
-
+#define NUM_SENSORS   8
 struct IR {
   unsigned int  sensorValues  [NUM_SENSORS];
   bool          filteredValues[NUM_SENSORS];
@@ -35,7 +34,6 @@ void IR_display_raw() {
   Serial.println();
 }
 
-//int cnt = 0;
 void IR_filter() {
   qtrrc.read(ir.sensorValues);
   for (unsigned char i = 0; i < NUM_SENSORS; i++) {
@@ -104,7 +102,7 @@ float IR_calculate_offset_back() {
 }
 bool IR_detect_spokes() {
   IR_filter();
-  if((ir.filteredValues[0] || ir.filteredValues[1] || ir.filteredValues[2]) &&  (ir.filteredValues[5] || ir.filteredValues[6] || ir.filteredValues[7])) {
+  if((ir.filteredValues[0] || ir.filteredValues[1]) &&  (ir.filteredValues[6] || ir.filteredValues[7])) {
     return true;
   }
   return false;

@@ -29,10 +29,10 @@
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
  * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-#define NUM_SENSORS   8
-/*
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+ * .
+ * ==========================================
+ *
  * (from Wikipedia)
  *
  * Beyond caste, creed, family or lineage,
@@ -42,6 +42,9 @@
  *
  * Path to Moksha -  Vivekachudamani, 8th Century AD
  */
+ 
+#define HIGH_SPD 300
+#define LOW_SPD 400
 enum Direction {
   FRONT,
   BACK,
@@ -95,22 +98,25 @@ void initialize() {
   init_matrix();
 }
 void run_course() {
-  start_time = millis();
-  go(FRONT, 43, 300, false);
+  go(FRONT, 43, HIGH_SPD, false);
   go(RIGHT, 90, false);
   go_pick(MAGENTA, true);
 }
 void run_periphery() {
   for(int i = 0; i < 4; i++) {
-    go(BACK, 12, true);
+    go(FRONT, 60, true);
     delay(1000);
     go(RIGHT, 90, false);
   }
 }
 void setup() {
   initialize();
+  start_time = millis();
   run_course();
+//return_to_gray(GREEN, 4);
+//run_periphery();
 }
 void loop() {
-  // testing
+  // testing'
+//  correct_angle();
 }

@@ -227,6 +227,10 @@ void go_until_spokes(Direction dir, int steps, int speed, bool correct) {
         motors.totalSteps = 5000;
         motors.steps = 0;
       }
+      if(counter > 3) {
+        countLock = true;
+        counter -= 2;
+      }
       // deaccelerate for 3 in * 216 steps
       if (counter >= steps) {
         motors.steps = 5000;
@@ -276,10 +280,12 @@ void correct_angle() {
   float sum = 0;
   float front = 0;
   float back = 0;
+  int c = 0;
   do {
     front = IR_calculate_offset();
     back = IR_calculate_offset_back();
     sum = front - back;
+//    Serial.println(sum);
     if (debug.angle) {
       Serial.print(front);
       Serial.print("\t");
@@ -289,10 +295,13 @@ void correct_angle() {
       Serial.println(sum);
     }
     if (sum < 0) {
-      go_const(LEFT, 1, 2000, false);
+      go_const(LEFT, 0.3, 2000, false);
     } else if (sum > 0) {
-      go_const(RIGHT, 1, 2000, false);
+      go_const(RIGHT, 0.3, 2000, false);
+    } else {
+       break;
     }
-  } while (sum != 0);
+    c++;
+  } while (c < 1000);
 }
 
